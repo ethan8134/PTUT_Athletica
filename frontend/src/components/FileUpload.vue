@@ -98,7 +98,7 @@ const handleFileUpload = () => {
  */
 const redirectToSessionForm = () => {
   // Ajustez la route si nécessaire, par exemple '/sessions/new'
-  router.push("/session-form");
+  router.push("/AjouterSession");
 };
 </script>
 
