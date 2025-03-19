@@ -1,23 +1,48 @@
--- Initialisation des tables
--- Initialisation des tables
-INSERT INTO Indicateur(id, nom, valeur, unite, categorie) VALUES
-                                                              (1, 'DIST', '10', 'km', 'Course'),         -- Distance parcourue : 10 km
-                                                              (2, 'TEMPS', '42', 'min', 'Course'),         -- Temps réalisé : 42 minutes
-                                                              (3, 'PACE', '4.2', 'min/km', 'Course'),       -- Allure moyenne : 4,2 min/km
-                                                              (4, 'CAL', '800', 'kcal', 'Course'),          -- Calories brûlées : 800 kcal
-                                                              (5, 'FREQ', '150', 'bpm', 'Course'),          -- Fréquence cardiaque moyenne : 150 bpm
-    (6, 'ELE', '30', 'm', 'Course');              -- Dénivelé positif : 30 m
--- Si on fixe les clés auto-générées, il faut réinitialiser le compteur
--- Attention, cette commande n'est pas standard SQL
--- ici la syntaxe pour PostgreSQL
-ALTER SEQUENCE indicateur_id_seq RESTART WITH 4;
+-- 🔹 Ajouter des utilisateurs sans ID (auto-incrémentation)
+INSERT INTO utilisateur (pseudo, email, mdp, preferences)
+VALUES
+    ('Yasmine', 'yasmine@example.com', 'motdepasse1', 'Running'),
+    ('Ali', 'ali@example.com', 'motdepasse2', 'Trail'),
+    ('Sofia', 'sofia@example.com', 'motdepasse3', 'Marathon');
 
--- Insertion des sessions
-INSERT INTO Session (id, nom, date) VALUES
-                                        (1, 'Session Running', '2025-03-12'),
-                                        (2, 'Session Cycling', '2025-03-13'),
-                                        (3, 'Session Swimming', '2025-03-14'),
-                                        (4, 'Session Yoga', '2025-03-15');
+-- 🔹 Réinitialiser l'auto-incrémentation pour PostgreSQL
+ALTER SEQUENCE utilisateur_id_personne_seq RESTART WITH 4;
 
--- Réinitialisation du compteur d'auto-incrément (spécifique à H2)
-ALTER SEQUENCE session_id_seq RESTART WITH 5;
+-- 🔹 Ajouter des sessions
+INSERT INTO session (nom, date_session, fichier, id_personne)
+VALUES
+    ('Matin Running', '2024-03-06', 'fichier1.txt', 1),
+    ('Course Montagne', '2024-03-05', 'fichier2.txt', 2);
+
+ALTER SEQUENCE session_id_session_seq RESTART WITH 3;
+
+-- 🔹 Ajouter des catégories
+INSERT INTO categorie (nom_categorie)
+VALUES ('Performance'),
+       ('Santé');
+
+ALTER SEQUENCE categorie_id_categorie_seq RESTART WITH 3;
+
+-- 🔹 Ajouter des indicateurs globaux
+INSERT INTO indicateur_global (nom, unite, date, id_personne, id_categorie)
+VALUES
+    ('Poids', 'kg', '2024-03-01', 1, 2),
+    ('Heures de sommeil', 'heures', '2024-03-04', 3, 2);
+
+ALTER SEQUENCE indicateur_global_id_indicateur_global_seq RESTART WITH 3;
+
+-- 🔹 Ajouter des indicateurs session
+INSERT INTO indicateur_session (nom, unite, date, id_personne, id_session, id_categorie)
+VALUES
+    ('Vitesse', 'km/h', '2024-03-06', 1, 1, 1),
+    ('Fréquence cardiaque', 'bpm', '2024-03-05', 2, 2, 2);
+
+ALTER SEQUENCE indicateur_session_id_indicateur_session_seq RESTART WITH 3;
+
+-- 🔹 Ajouter des mesures
+INSERT INTO mesure (valeur, date_mesure, id_indicateur_session, id_personne, id_session)
+VALUES
+    ('12.5', '2024-03-06 08:30:00', 1, 1, 1),
+    ('140', '2024-03-06 08:32:00', 2, 2, 2);
+
+ALTER SEQUENCE mesure_id_mesure_seq RESTART WITH 3;
