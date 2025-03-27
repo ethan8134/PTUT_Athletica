@@ -1,14 +1,12 @@
 package isis.projet.backend.service;
 
-import isis.projet.backend.dao.MesureRepository;
 import isis.projet.backend.entity.Mesure;
+import isis.projet.backend.dao.MesureRepository;
 import org.springframework.stereotype.Service;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class MesureService {
 
     private final MesureRepository mesureRepository;
@@ -29,20 +27,7 @@ public class MesureService {
         return mesureRepository.save(mesure);
     }
 
-    public Mesure updateMesure(Integer id, Mesure mesure) {
-        return mesureRepository.findById(id)
-                .map(existing -> {
-                    existing.setValeur(mesure.getValeur());
-                    existing.setDateMesure(mesure.getDateMesure());
-                    return mesureRepository.save(existing);
-                }).orElse(null);
-    }
-
-    public boolean deleteMesure(Integer id) {
-        if (mesureRepository.existsById(id)) {
-            mesureRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public void deleteMesure(Integer id) {
+        mesureRepository.deleteById(id);
     }
 }

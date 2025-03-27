@@ -1,14 +1,20 @@
 <template>
   <div>
-    <FileUpload />
-    <v-list-item to="/AjouterSession" class="redirect-btn">
-      <v-list-item-title>Commencer un enregistrement vierge</v-list-item-title>
-    </v-list-item>
+    <SessionForm
+      v-if="showForm"
+      @close-form="showForm = false"
+    />
+    <FileUpload
+      v-else
+      @start-session="showForm = true"
+    />
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
 import FileUpload from "@/components/FileUpload.vue";
-</script>
+import SessionForm from "@/components/SessionForm.vue";
 
-<style scoped></style>
+const showForm = ref(false);
+</script>

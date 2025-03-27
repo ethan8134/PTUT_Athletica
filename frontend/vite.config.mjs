@@ -58,7 +58,7 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8989", // URL du backend
         changeOrigin: true,
-        pathRewrite: { "^/api": "" },
+        //pathRewrite: { "^/api": "" },
       },
     },
   },

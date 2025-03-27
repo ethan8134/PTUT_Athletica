@@ -47,6 +47,9 @@
           <v-list-item-title>Mes sessions</v-list-item-title>
         </v-list-item>
       </v-list>
+      <v-list-item to="/MesProgressions">
+        <v-list-item-title>Mes Progressions</v-list-item-title>
+      </v-list-item>
     </v-navigation-drawer>
     <!-- la zone où sera affichée les différentes "pages"-->
     <v-main>

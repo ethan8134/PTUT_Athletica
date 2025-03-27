@@ -61,9 +61,9 @@
         affinez vos entraînements pour maximiser vos performances.
       </v-card-text>
 
-      <v-btn color="primary" class="mt-3" to="/dashboard" variant="flat">
-        Accéder au Tableau de Bord
-        <v-icon right>mdi-arrow-right</v-icon>
+      <v-btn color="primary" class="mt-3" to="/MesProgressions" variant="flat">
+        Accéder à mes Progressions
+        <v-icon right>mdi-chart-box</v-icon>
       </v-btn>
     </v-card>
   </v-container>

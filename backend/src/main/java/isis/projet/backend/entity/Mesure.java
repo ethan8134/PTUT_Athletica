@@ -1,33 +1,59 @@
 package isis.projet.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
-@Getter @Setter
 public class Mesure {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idMesure;
+    private Long id;
 
-    private String valeur;
-    private LocalDateTime dateMesure;
+    private Double valeur;
 
-    // Relation avec Utilisateur
-    @ManyToOne
-    @JoinColumn(name = "id_personne")
-    private Utilisateur utilisateur;
+    @Column(name = "date_mesure")
+    private LocalDate dateMesure;
 
-    // Relation avec Session
-    @ManyToOne
-    @JoinColumn(name = "id_session")
-    private Session session;
-
-    // Relation avec IndicateurSession
     @ManyToOne
     @JoinColumn(name = "id_indicateur_session")
+    @JsonBackReference // 👈 Ici on indique : "ne pas re-serialiser ce champ"
     private IndicateurSession indicateurSession;
+
+
+    // ✅ GETTERS ET SETTERS OBLIGATOIRES
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Double getValeur() {
+        return valeur;
+    }
+
+    public void setValeur(Double valeur) {
+        this.valeur = valeur;
+    }
+
+    public LocalDate getDateMesure() {
+        return dateMesure;
+    }
+
+    public void setDateMesure(LocalDate dateMesure) {
+        this.dateMesure = dateMesure;
+    }
+
+    public IndicateurSession getIndicateurSession() {
+        return indicateurSession;
+    }
+
+    public void setIndicateurSession(IndicateurSession indicateurSession) {
+        this.indicateurSession = indicateurSession;
+    }
 }
+

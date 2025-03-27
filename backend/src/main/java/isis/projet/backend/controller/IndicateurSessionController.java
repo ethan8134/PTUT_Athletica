@@ -1,58 +1,47 @@
 package isis.projet.backend.controller;
 
 import isis.projet.backend.entity.IndicateurSession;
-import isis.projet.backend.service.IndicateurSessionService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import isis.projet.backend.dao.IndicateurSessionRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/indicateurs-session")
-@Slf4j
+@RequestMapping("/api/indicateurSessions")
 public class IndicateurSessionController {
 
-    private final IndicateurSessionService indicateurSessionService;
+    private final IndicateurSessionRepository indicateurSessionRepository;
 
-    public IndicateurSessionController(IndicateurSessionService indicateurSessionService) {
-        this.indicateurSessionService = indicateurSessionService;
+    public IndicateurSessionController(IndicateurSessionRepository indicateurSessionRepository) {
+        this.indicateurSessionRepository = indicateurSessionRepository;
     }
 
+    // GET : récupérer tous les indicateurs
     @GetMapping
-    public ResponseEntity<List<IndicateurSession>> getAllIndicateurs() {
-        return ResponseEntity.ok(indicateurSessionService.getAllIndicateurs());
+    public List<IndicateurSession> getAllIndicateurs() {
+        return indicateurSessionRepository.findAll();
     }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<IndicateurSession> getIndicateurById(@PathVariable Integer id) {
-        return indicateurSessionService.getIndicateurById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @PostMapping
-    public ResponseEntity<IndicateurSession> createIndicateur(@RequestBody IndicateurSession indicateur) {
-        return ResponseEntity.ok(indicateurSessionService.createIndicateur(indicateur));
+    public IndicateurSession createIndicateurSession(@RequestBody IndicateurSession indicateur) {
+        return indicateurSessionRepository.save(indicateur);
     }
 
+
+    // PUT : mise à jour d'un indicateur
     @PutMapping("/{id}")
-    public ResponseEntity<IndicateurSession> updateIndicateur(@PathVariable Integer id, @RequestBody IndicateurSession indicateur) {
-        IndicateurSession updated = indicateurSessionService.updateIndicateur(id, indicateur);
-        if (updated != null) {
-            return ResponseEntity.ok(updated);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public IndicateurSession updateIndicateur(@PathVariable Integer id, @RequestBody IndicateurSession updatedIndicateur) {
+        return indicateurSessionRepository.findById(id).map(ind -> {
+            ind.setNom(updatedIndicateur.getNom());
+            ind.setUnite(updatedIndicateur.getUnite());
+            ind.setDate(updatedIndicateur.getDate());
+            // Ici, tu peux mettre à jour d'autres champs si besoin
+            return indicateurSessionRepository.save(ind);
+        }).orElseThrow(() -> new RuntimeException("Indicateur non trouvé"));
     }
 
+    // DELETE : suppression d'un indicateur
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteIndicateur(@PathVariable Integer id) {
-        boolean deleted = indicateurSessionService.deleteIndicateur(id);
-        if (deleted) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public void deleteIndicateur(@PathVariable Integer id) {
+        indicateurSessionRepository.deleteById(id);
     }
 }

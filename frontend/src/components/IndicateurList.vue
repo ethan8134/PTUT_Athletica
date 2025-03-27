@@ -8,16 +8,11 @@
       />
 
       <div class="dropdown">
-        <button @click="toggleDropdown">Filtrer ▼</button>
+        <button @click="toggleDropdown">Filtrer Catégorie ▼</button>
         <div v-if="showDropdown" class="dropdown-menu">
-          <button @click="selectCateg('')">Toutes catégories</button>
-          <button
-            v-for="categ in categorieUnique"
-            :key="categ"
-            @click="selectCateg(categ)"
-          >
-            {{ categ }}
-          </button>
+          <button @click="selectType('')">Toutes catégories</button>
+          <button @click="selectType('global')">Indicateurs Globaux</button>
+          <button @click="selectType('session')">Indicateurs Session</button>
         </div>
       </div>
     </div>
@@ -25,39 +20,35 @@
     <div class="table-container">
       <table>
         <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Valeur</th>
-            <th>Unité</th>
-            <th>Categorie</th>
-            <th>Actions</th>
-          </tr>
+        <tr>
+          <th>Nom</th>
+          <th>Unité</th>
+          <th>Catégorie</th>
+          <th>Type</th>
+          <th>Actions</th>
+        </tr>
         </thead>
         <tbody>
-          <tr v-for="ind in indicateur" :key="ind.id">
-            <td v-if="!ind.editing">{{ ind.nom }}</td>
-            <td v-else><input v-model="ind.nom" /></td>
+        <tr v-for="ind in indicateur" :key="ind.id">
+          <td v-if="!ind.editing">{{ ind.nom }}</td>
+          <td v-else><input v-model="ind.nom" /></td>
 
-            <td v-if="!ind.editing">{{ ind.valeur }}</td>
-            <td v-else><input v-model="ind.valeur" /></td>
 
-            <td v-if="!ind.editing">{{ ind.unite }}</td>
-            <td v-else><input v-model="ind.unite" /></td>
+          <td v-if="!ind.editing">{{ ind.unite }}</td>
+          <td v-else><input v-model="ind.unite" /></td>
 
-            <td v-if="!ind.editing">{{ ind.categorie }}</td>
-            <td v-else><input v-model="ind.categorie" /></td>
+          <td v-if="!ind.editing">{{ ind.categorie.nom }}</td>
+          <td v-else><input v-model="ind.categorie.nom" /></td>
 
-            <td class="action-buttons">
-              <button v-if="!ind.editing" @click="startEdit(ind)">
-                Modifier
-              </button>
-              <button v-else @click="updateIndicateur(ind)">Valider</button>
-              <button v-if="ind.editing" @click="cancelEdit(ind)">
-                Annuler
-              </button>
-              <button @click="() => deleteIndicateur(ind.id)">Supprimer</button>
-            </td>
-          </tr>
+          <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
+
+          <td class="action-buttons">
+            <button v-if="!ind.editing" @click="startEdit(ind)">Modifier</button>
+            <button v-else @click="updateIndicateur(ind)">Valider</button>
+            <button v-if="ind.editing" @click="cancelEdit(ind)">Annuler</button>
+            <button @click="() => deleteIndicateur(ind)">Supprimer</button>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>
@@ -71,126 +62,133 @@ const searchTerm = ref("");
 const indicateur = ref([]);
 const allIndicateurs = ref([]);
 const showDropdown = ref(false);
-const selectedCateg = ref("");
-const categorieUnique = ref([]);
-const showForm = ref(false);
+const selectedType = ref("");
 const originalIndicateur = ref({});
 
-// URL de l'API (les endpoints du backend sont configurés sur /api/indicateurs)
-const apiBaseUrl = "http://localhost:8989/api/indicateurs";
+function startEdit(ind) {
+  ind.editing = true;
+}
 
-// Récupère tous les indicateurs depuis le backend
-const fetchIndicateurs = () => {
-  fetch(apiBaseUrl)
-    .then((response) => response.json())
-    .then((data) => {
-      allIndicateurs.value = data; // affecte la réponse complète
-      // Met à jour les catégories uniques à partir des données récupérées
-      categorieUnique.value = [
-        ...new Set(allIndicateurs.value.map((ind) => ind.categorie)),
-      ];
-      filterIndicateurs();
+function cancelEdit(ind) {
+  ind.editing = false;
+  getIndicateurs(); // Pour remettre à jour après annulation
+}
+function getIndicateurs() {
+  const fetchOptions = { method: "GET" };
+
+  // Fetch indicateurs globaux
+  fetch("http://localhost:8989/api/indicateurGlobals", fetchOptions)
+    .then(response => response.json())
+    .then(dataGlobals => {
+      const globals = dataGlobals.map(ind => ({
+        id: ind.idIndicateurGlobal,
+        nom: ind.nom,
+        unite: ind.unite,
+        categorie: { nom: "Global" }, // Pas de catégorie précise côté global, tu peux adapter
+        type: "global"
+      }));
+
+      // Fetch indicateurs sessions
+      fetch("http://localhost:8989/api/indicateurSessions", fetchOptions)
+        .then(response => response.json())
+        .then(dataSessions => {
+          const sessions = dataSessions.map(ind => ({
+            id: ind.idIndicateurSession,
+            nom: ind.nom,
+            unite: ind.unite,
+            categorie: ind.categorie || { nom: "Session" }, // Si pas de catégorie côté backend, adapter ici
+            type: "session"
+          }));
+
+          // Fusionner les deux listes
+          allIndicateurs.value = [...globals, ...sessions];
+          filterIndicateurs();
+        });
     })
-    .catch((error) => {
-      console.error("Erreur lors de la récupération des indicateurs: ", error);
-    });
-};
+    .catch(error => console.error("Erreur récupération indicateurs :", error));
+}
 
-const filterIndicateurs = () => {
-  indicateur.value = allIndicateurs.value.filter((ind) => {
+
+function filterIndicateurs() {
+  indicateur.value = allIndicateurs.value.filter(ind => {
     const matchesSearch = searchTerm.value
       ? ind.nom.toLowerCase().includes(searchTerm.value.toLowerCase())
       : true;
-    const matchesCateg = selectedCateg.value
-      ? ind.categorie === selectedCateg.value
+    const matchesType = selectedType.value
+      ? ind.type === selectedType.value
       : true;
-    return matchesSearch && matchesCateg;
+    return matchesSearch && matchesType;
   });
-};
+}
 
-const selectCateg = (categorie) => {
-  selectedCateg.value = categorie;
+function toggleDropdown() {
+  showDropdown.value = !showDropdown.value;
+}
+
+function selectType(type) {
+  selectedType.value = type;
   showDropdown.value = false;
   filterIndicateurs();
-};
+}
 
-const toggleDropdown = () => {
-  showDropdown.value = !showDropdown.value;
-};
-
-const updateIndicateur = (ind) => {
-  // Prépare l'objet à envoyer avec les bons noms de propriété
+function updateIndicateur(ind) {
   const updatedInd = {
-    id: ind.id,
     nom: ind.nom,
-    valeur: ind.valeur,
     unite: ind.unite,
-    categorie: ind.categorie,
+    date: new Date().toISOString().split('T')[0],
+    utilisateur: { idPersonne: 1 },
+    categorie: ind.type === "session" ? { idCategorie: ind.categorie?.idCategorie || 1 } : null
   };
 
-  // Notez que l'URL inclut l'ID pour correspondre à @PutMapping("/{id}")
-  fetch(`${apiBaseUrl}/${ind.id}`, {
+  const url = ind.type === "global"
+    ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
+    : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
+
+  const fetchOptions = {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedInd),
-  })
+    body: JSON.stringify(updatedInd)
+  };
+
+  fetch(url, fetchOptions)
     .then((response) => {
-      if (!response.ok) {
-        throw new Error("Erreur lors de la mise à jour de l'indicateur");
-      }
+      if (!response.ok) throw new Error("Erreur mise à jour");
       return response.json();
     })
     .then(() => {
       ind.editing = false;
-      fetchIndicateurs();
+      getIndicateurs(); // Recharge la liste
+      alert("Indicateur modifié !");
     })
-    .catch((error) => {
-      console.error("Erreur lors de la mise à jour de l'indicateur: ", error);
-    });
-};
+    .catch((error) => console.error("Erreur mise à jour :", error));
+}
 
-const deleteIndicateur = (id) => {
-  if (
-    !window.confirm(
-      "Êtes-vous sûr de vouloir supprimer cet indicateur ? Cette action est irréversible."
-    )
-  ) {
+function deleteIndicateur(ind) {
+  if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet indicateur ?")) {
     return;
   }
+  const url =
+    ind.type === "global"
+      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
+      : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
 
-  fetch(`${apiBaseUrl}/${id}`, { method: "DELETE" })
+  const fetchOptions = { method: "DELETE" };
+  fetch(url, fetchOptions)
     .then((response) => {
-      if (!response.ok) {
-        throw new Error("Erreur lors de la suppression de l'indicateur");
-      }
-      // On peut supposer que la suppression réussit si response.ok est vrai
-      return response.json();
-    })
-    .then(() => {
-      // Met à jour la liste en retirant l'indicateur supprimé
-      allIndicateurs.value = allIndicateurs.value.filter(
-        (ind) => ind.id !== id
-      );
+      if (!response.ok) throw new Error("Erreur suppression");
+      // Supprimer localement
+      allIndicateurs.value = allIndicateurs.value.filter((i) => i.id !== ind.id);
       filterIndicateurs();
+      alert("Indicateur supprimé !");
     })
-    .catch((error) => {
-      console.error("Erreur lors de la suppression de l'indicateur: ", error);
-    });
-};
-
-const startEdit = (ind) => {
-  originalIndicateur.value[ind.id] = { ...ind };
-  ind.editing = true;
-};
-
-const cancelEdit = (ind) => {
-  Object.assign(ind, originalIndicateur.value[ind.id]);
-  ind.editing = false;
-};
+    .catch((error) => console.error("Erreur suppression :", error));
+}
 
 watch(searchTerm, filterIndicateurs);
-onMounted(fetchIndicateurs);
+onMounted(getIndicateurs);
+
 </script>
+
 
 <style scoped>
 body {

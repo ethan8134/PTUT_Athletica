@@ -31,20 +31,24 @@
 
     <!-- Bouton pour rediriger vers le formulaire session -->
     <div class="divider"></div>
-    <button class="btn-new-session" @click="redirectToSessionForm">
+    <!-- Après -->
+    <button class="btn-new-session" @click="$emit('start-session')">
       Commencer un enregistrement vierge
     </button>
+
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import SessionForm from "@/components/SessionForm.vue";
+
 
 // Refs pour le fichier sélectionné et l'input
 const fileInput = ref(null);
 const selectedFile = ref(null);
-
+const showSessionForm = ref(false);
 // Pour la navigation
 const router = useRouter();
 
@@ -97,9 +101,9 @@ const handleFileUpload = () => {
  * Redirection vers le formulaire Session
  */
 const redirectToSessionForm = () => {
-  // Ajustez la route si nécessaire, par exemple '/sessions/new'
-  router.push("/session-form");
+  showSessionForm.value = true;
 };
+
 </script>
 
 <style scoped>

@@ -1,26 +1,21 @@
 package isis.projet.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.Data;
 import java.util.List;
 
 @Entity
-@Getter @Setter
+@Data
 public class Categorie {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idCategorie;
 
-    private String nomCategorie;
+    private String nom;
 
-    // Relations vers les indicateurs globaux
     @OneToMany(mappedBy = "categorie", cascade = CascadeType.ALL)
-    private List<IndicateurGlobal> indicateursGlobaux;
-
-    // Relations vers les indicateurs session
-    @OneToMany(mappedBy = "categorie", cascade = CascadeType.ALL)
-    private List<IndicateurSession> indicateursSession;
+    @JsonIgnore
+    private List<IndicateurSession> indicateurSessions;
 }

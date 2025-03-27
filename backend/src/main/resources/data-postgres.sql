@@ -39,10 +39,11 @@ VALUES
 
 ALTER SEQUENCE indicateur_session_id_indicateur_session_seq RESTART WITH 3;
 
--- 🔹 Ajouter des mesures
-INSERT INTO mesure (valeur, date_mesure, id_indicateur_session, id_personne, id_session)
+INSERT INTO mesure (valeur, date_mesure, id_indicateur_session)
 VALUES
-    ('12.5', '2024-03-06 08:30:00', 1, 1, 1),
-    ('140', '2024-03-06 08:32:00', 2, 2, 2);
+    (12.5, '2024-03-01', 1),
+    (14.8, '2024-03-02', 1),
+    (75, '2024-03-01', 2),
+    (80, '2024-03-03', 2);
 
-ALTER SEQUENCE mesure_id_mesure_seq RESTART WITH 3;
+ALTER SEQUENCE mesure_id_seq RESTART WITH 5;

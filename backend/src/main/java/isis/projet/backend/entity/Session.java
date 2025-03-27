@@ -1,13 +1,13 @@
 package isis.projet.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Getter @Setter
+@Data
 public class Session {
 
     @Id
@@ -22,10 +22,8 @@ public class Session {
     @JoinColumn(name = "id_personne")
     private Utilisateur utilisateur;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
-    private List<Mesure> mesures;
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<IndicateurSession> indicateursSession;
-
 }

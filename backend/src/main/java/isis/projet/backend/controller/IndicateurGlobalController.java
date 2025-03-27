@@ -1,58 +1,45 @@
 package isis.projet.backend.controller;
 
 import isis.projet.backend.entity.IndicateurGlobal;
-import isis.projet.backend.service.IndicateurGlobalService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import isis.projet.backend.dao.IndicateurGlobalRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/indicateurs-globaux")
-@Slf4j
+@RequestMapping("/api/indicateurGlobals")
 public class IndicateurGlobalController {
 
-    private final IndicateurGlobalService indicateurGlobalService;
+    private final IndicateurGlobalRepository indicateurGlobalRepository;
 
-    public IndicateurGlobalController(IndicateurGlobalService indicateurGlobalService) {
-        this.indicateurGlobalService = indicateurGlobalService;
+    public IndicateurGlobalController(IndicateurGlobalRepository indicateurGlobalRepository) {
+        this.indicateurGlobalRepository = indicateurGlobalRepository;
     }
 
+    // GET : récupère tous les indicateurs globaux
     @GetMapping
-    public ResponseEntity<List<IndicateurGlobal>> getAllIndicateurs() {
-        return ResponseEntity.ok(indicateurGlobalService.getAllIndicateurs());
+    public List<IndicateurGlobal> getAllIndicateursGlobaux() {
+        return indicateurGlobalRepository.findAll();
     }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<IndicateurGlobal> getIndicateurById(@PathVariable Integer id) {
-        return indicateurGlobalService.getIndicateurById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @PostMapping
-    public ResponseEntity<IndicateurGlobal> createIndicateur(@RequestBody IndicateurGlobal indicateur) {
-        return ResponseEntity.ok(indicateurGlobalService.createIndicateur(indicateur));
+    public IndicateurGlobal createIndicateurGlobal(@RequestBody IndicateurGlobal indicateur) {
+        return indicateurGlobalRepository.save(indicateur);
     }
 
+    // PUT : mise à jour d'un indicateur global
     @PutMapping("/{id}")
-    public ResponseEntity<IndicateurGlobal> updateIndicateur(@PathVariable Integer id, @RequestBody IndicateurGlobal indicateur) {
-        IndicateurGlobal updated = indicateurGlobalService.updateIndicateur(id, indicateur);
-        if (updated != null) {
-            return ResponseEntity.ok(updated);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public IndicateurGlobal updateIndicateurGlobal(@PathVariable Integer id, @RequestBody IndicateurGlobal updatedIndicateur) {
+        return indicateurGlobalRepository.findById(id).map(ind -> {
+            ind.setNom(updatedIndicateur.getNom());
+            ind.setUnite(updatedIndicateur.getUnite());
+            ind.setDate(updatedIndicateur.getDate());
+            return indicateurGlobalRepository.save(ind);
+        }).orElseThrow(() -> new RuntimeException("Indicateur Global non trouvé"));
     }
 
+    // DELETE : suppression
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteIndicateur(@PathVariable Integer id) {
-        boolean deleted = indicateurGlobalService.deleteIndicateur(id);
-        if (deleted) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public void deleteIndicateurGlobal(@PathVariable Integer id) {
+        indicateurGlobalRepository.deleteById(id);
     }
 }
