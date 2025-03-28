@@ -11,21 +11,21 @@
     <div class="table-container">
       <table>
         <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
+        <tr>
+          <th>Nom</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
         </thead>
         <tbody>
-          <tr v-for="ses in sessions" :key="ses.id">
-            <td>{{ ses.nom }}</td>
-            <td>{{ ses.date }}</td>
-            <td class="action-buttons">
-              <button @click="redirectToEdit(ses.id)">Modifier</button>
-              <button @click="deleteSession(ses.id)">Supprimer</button>
-            </td>
-          </tr>
+        <tr v-for="ses in sessions" :key="ses.idSession">
+        <td>{{ ses.nom }}</td>
+          <td>{{ ses.date }}</td>
+          <td class="action-buttons">
+            <button @click="redirectToEdit(ses.idSession)">Modifier</button>
+            <button @click="deleteSession(ses.idSession)">Supprimer</button>
+          </td>
+        </tr>
         </tbody>
       </table>
     </div>
@@ -38,6 +38,8 @@ import { ref, watch, onMounted } from "vue";
 const searchTerm = ref("");
 const sessions = ref([]);
 const allSessions = ref([]);
+const sessionToEdit = ref(null);
+
 
 // URL de l'API pour les sessions
 const apiBaseUrl = "http://localhost:8989/api/sessions";
@@ -72,7 +74,7 @@ const deleteSession = (id) => {
   fetch(`${apiBaseUrl}/${id}`, { method: "DELETE" })
     .then((response) => {
       if (!response.ok) throw new Error("Erreur lors de la suppression");
-      return response.json();
+      return Promise.resolve();
     })
     .then(() => fetchSessions())
     .catch((error) => {
@@ -81,10 +83,13 @@ const deleteSession = (id) => {
 };
 
 const redirectToEdit = (id) => {
-  // Pour simplifier, on affiche une alerte.
-  // Vous pouvez utiliser Vue Router pour rediriger vers une page d'édition.
-  alert("Redirection vers l'édition de la session avec l'id " + id);
+  const session = sessions.value.find(s => s.id === id);
+  if (session) {
+    sessionToEdit.value = { ...session }; // on copie pour éviter la mutation directe
+    showForm.value = true;
+  }
 };
+
 </script>
 
 <style scoped>

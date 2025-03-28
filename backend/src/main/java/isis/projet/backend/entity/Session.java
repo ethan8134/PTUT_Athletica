@@ -1,26 +1,29 @@
 package isis.projet.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@RequiredArgsConstructor
-@ToString
+@Data
 public class Session {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer idSession;
 
-    @NonNull
-    @Column(nullable = false)
     private String nom;
+    private LocalDate dateSession;
+    private String fichier;
 
-    @NonNull
-    @Column(nullable = false)
-    private LocalDate date;
+    @ManyToOne
+    @JoinColumn(name = "id_personne")
+    private Utilisateur utilisateur;
+
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<IndicateurSession> indicateursSession;
 }
