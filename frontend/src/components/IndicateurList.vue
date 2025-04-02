@@ -20,35 +20,44 @@
     <div class="table-container">
       <table>
         <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Unité</th>
-          <th>Catégorie</th>
-          <th>Type</th>
-          <th>Actions</th>
-        </tr>
+          <tr>
+            <th>Nom</th>
+            <th>Unité</th>
+            <th>Catégorie</th>
+            <th>Type</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="ind in indicateur" :key="ind.id">
-          <td v-if="!ind.editing">{{ ind.nom }}</td>
-          <td v-else><input v-model="ind.nom" /></td>
+          <tr v-for="ind in indicateur" :key="ind.id">
+            <td v-if="!ind.editing">{{ ind.nom }}</td>
+            <td v-else><input v-model="ind.nom" /></td>
 
-          <td v-if="!ind.editing">{{ ind.unite }}</td>
-          <td v-else><input v-model="ind.unite" /></td>
+            <td v-if="!ind.editing">{{ ind.unite }}</td>
+            <td v-else><input v-model="ind.unite" /></td>
 
-          <td v-if="!ind.editing">{{ ind.categorie.nom }}</td>
-          <td v-else><input v-model="ind.categorie.nom" /></td>
+            <td v-if="!ind.editing">{{ ind.categorie.nom }}</td>
+            <td v-else><input v-model="ind.categorie.nom" /></td>
 
-          <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
+            <td>{{ ind.type === "global" ? "Global" : "Session" }}</td>
 
-          <td class="action-buttons">
-            <button v-if="!ind.editing" @click="startEdit(ind)">Modifier</button>
-            <button v-else @click="updateIndicateur(ind)">Valider</button>
-            <button v-if="ind.editing" @click="cancelEdit(ind)">Annuler</button>
-            <button @click="() => deleteIndicateur(ind)">Supprimer</button>
-            <button v-if="ind.type === 'session'" @click="openMesureModal(ind)">➕ Ajouter valeur</button>
-          </td>
-        </tr>
+            <td class="action-buttons">
+              <button v-if="!ind.editing" @click="startEdit(ind)">
+                Modifier
+              </button>
+              <button v-else @click="updateIndicateur(ind)">Valider</button>
+              <button v-if="ind.editing" @click="cancelEdit(ind)">
+                Annuler
+              </button>
+              <button @click="() => deleteIndicateur(ind)">Supprimer</button>
+              <button
+                v-if="ind.type === 'session'"
+                @click="openMesureModal(ind)"
+              >
+                ➕ Ajouter valeur
+              </button>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -57,7 +66,11 @@
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
         <h3>Ajouter une valeur à {{ currentIndicateur.nom }}</h3>
-        <input type="number" v-model="nouvelleMesure.valeur" placeholder="Valeur" />
+        <input
+          type="number"
+          v-model="nouvelleMesure.valeur"
+          placeholder="Valeur"
+        />
         <input type="date" v-model="nouvelleMesure.dateMesure" />
         <div class="modal-buttons">
           <button @click="ajouterMesure">Enregistrer</button>
@@ -78,7 +91,7 @@ const showDropdown = ref(false);
 const selectedType = ref("");
 const showModal = ref(false);
 const currentIndicateur = ref(null);
-const nouvelleMesure = ref({ valeur: '', dateMesure: '' });
+const nouvelleMesure = ref({ valeur: "", dateMesure: "" });
 
 function startEdit(ind) {
   ind.editing = true;
@@ -149,7 +162,10 @@ function updateIndicateur(ind) {
     unite: ind.unite,
     date: new Date().toISOString().split("T")[0],
     utilisateur: { idPersonne: 1 },
-    categorie: ind.type === "session" ? { idCategorie: ind.categorie?.idCategorie || 1 } : null,
+    categorie:
+      ind.type === "session"
+        ? { idCategorie: ind.categorie?.idCategorie || 1 }
+        : null,
   };
 
   const url =
@@ -188,7 +204,9 @@ function deleteIndicateur(ind) {
   fetch(url, { method: "DELETE" })
     .then((response) => {
       if (!response.ok) throw new Error("Erreur suppression");
-      allIndicateurs.value = allIndicateurs.value.filter((i) => i.id !== ind.id);
+      allIndicateurs.value = allIndicateurs.value.filter(
+        (i) => i.id !== ind.id
+      );
       filterIndicateurs();
       alert("Indicateur supprimé !");
     })
@@ -197,7 +215,7 @@ function deleteIndicateur(ind) {
 
 function openMesureModal(ind) {
   currentIndicateur.value = ind;
-  nouvelleMesure.value = { valeur: '', dateMesure: '' };
+  nouvelleMesure.value = { valeur: "", dateMesure: "" };
   showModal.value = true;
 }
 
@@ -288,7 +306,7 @@ onMounted(getIndicateurs);
 }
 
 .dropdown button {
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
   border: none;
   padding: 10px 14px;
@@ -330,7 +348,7 @@ onMounted(getIndicateurs);
 }
 
 .table-container th {
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
 }
 
@@ -375,5 +393,4 @@ onMounted(getIndicateurs);
 .action-buttons button:hover {
   opacity: 0.85;
 }
-
 </style>

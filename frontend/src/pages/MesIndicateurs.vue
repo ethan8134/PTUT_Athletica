@@ -1,7 +1,9 @@
 <template>
   <v-container class="button-container">
     <v-list-item to="/AjouterIndicateurGlobal" class="redirect-btn">
-    <v-list-item-title>Enregistrer un nouvel indicateur global</v-list-item-title>
+      <v-list-item-title
+        >Enregistrer un nouvel indicateur global</v-list-item-title
+      >
     </v-list-item>
     <v-list-item to="/Indicateurs" class="redirect-btn">
       <v-list-item-title>Consulter mes Indicateurs</v-list-item-title>
@@ -23,15 +25,17 @@
 /* Style personnalisé pour rendre le bouton compact et visible */
 .redirect-btn {
   display: flex;
-  height: 90%;
+  width: 330px;
+  height: 170px;
+  justify-content: center;
   padding: 8px 16px;
-  background-color: #007fff;
-  color: #fff;
-  border-radius: 4px;
+  background-color: #0e0c70;
+  color: #ccc;
   text-align: center;
   font-weight: bold;
   text-decoration: none;
   transition: background-color 0.3s ease;
+  border-radius: 150px;
 }
 
 /* Changement de couleur au survol */

@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <!-- une barre de navigation -->
-    <v-app-bar color="#007FFF" density="compact">
+    <v-app-bar color="#0e0c70" density="compact">
       <!-- mettre l'icone dans le 'slot prepend' de 'v-app-bar' soit au début à gauche -->
       <template v-slot:prepend>
         <!-- un clic sur l'icone cache/affiche la zone de menu de gauche -->
@@ -12,7 +12,7 @@
       <!-- un bouton avec un menu -->
 
       <!-- un vers la page "about" -->
-      <v-btn to="/PageAbout">About</v-btn>
+      <v-btn to="/PageAide">Aide</v-btn>
       <!-- mettre l'icone dans le 'slot append' de 'v-app-bar' soit au fond à droite -->
       <template v-slot:append>
         <v-btn id="menu-droite" icon="mdi-dots-vertical"></v-btn>
@@ -50,6 +50,9 @@
       <v-list-item to="/MesProgressions">
         <v-list-item-title>Mes Progressions</v-list-item-title>
       </v-list-item>
+      <v-list-item to="/PageMonCompte">
+        <v-list-item-title>Mon Compte</v-list-item-title>
+      </v-list-item>
     </v-navigation-drawer>
     <!-- la zone où sera affichée les différentes "pages"-->
     <v-main>
@@ -71,7 +74,7 @@ const drawer = ref(false); // booléen pour afficher/cacher la zone de gauche
 }
 
 .v-navigation-drawer {
-  background-color: #007fff;
+  background-color: #0e0c70;
 }
 
 .v-list-item-title {

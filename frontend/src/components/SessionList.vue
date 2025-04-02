@@ -11,21 +11,21 @@
     <div class="table-container">
       <table>
         <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
+          <tr>
+            <th>Nom</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="ses in sessions" :key="ses.idSession">
-        <td>{{ ses.nom }}</td>
-          <td>{{ ses.date }}</td>
-          <td class="action-buttons">
-            <button @click="redirectToEdit(ses.idSession)">Modifier</button>
-            <button @click="deleteSession(ses.idSession)">Supprimer</button>
-          </td>
-        </tr>
+          <tr v-for="ses in sessions" :key="ses.idSession">
+            <td>{{ ses.nom }}</td>
+            <td>{{ ses.date }}</td>
+            <td class="action-buttons">
+              <button @click="redirectToEdit(ses.idSession)">Modifier</button>
+              <button @click="deleteSession(ses.idSession)">Supprimer</button>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -39,7 +39,6 @@ const searchTerm = ref("");
 const sessions = ref([]);
 const allSessions = ref([]);
 const sessionToEdit = ref(null);
-
 
 // URL de l'API pour les sessions
 const apiBaseUrl = "http://localhost:8989/api/sessions";
@@ -83,13 +82,12 @@ const deleteSession = (id) => {
 };
 
 const redirectToEdit = (id) => {
-  const session = sessions.value.find(s => s.id === id);
+  const session = sessions.value.find((s) => s.id === id);
   if (session) {
     sessionToEdit.value = { ...session }; // on copie pour éviter la mutation directe
     showForm.value = true;
   }
 };
-
 </script>
 
 <style scoped>
@@ -134,7 +132,7 @@ td {
   height: 60px;
 }
 th {
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
 }
 tr:nth-child(even) {
@@ -149,7 +147,7 @@ tr:nth-child(even) {
   padding: 8px 12px;
   border: 1px solid black;
   border-radius: 5px;
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
   cursor: pointer;
   transition: background 0.3s;
@@ -165,7 +163,7 @@ tr:nth-child(even) {
 .button-container button {
   padding: 12px;
   font-size: 18px;
-  background-color: #007fff;
+  background-color: #0e0c70;
   border-radius: 5px;
   border: none;
   color: white;
