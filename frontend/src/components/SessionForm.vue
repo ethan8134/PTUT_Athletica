@@ -93,6 +93,7 @@
       @add-indicateur="handleIndicatorCreated"
       @close-form="closeIndicatorForm"
     />
+
   </div>
 </template>
 
@@ -108,7 +109,7 @@ const session = ref({
 });
 
 const apiSessionUrl = "http://localhost:8989/api/sessions";
-const apiIndicateurUrl = "http://localhost:8989/api/indicateurs";
+const apiIndicateurUrl = "http://localhost:8989/api/indicateurSessions";
 
 const showIndicatorOptions = ref(false);
 const existingIndicators = ref([]);
@@ -125,6 +126,7 @@ const fetchExistingIndicators = () => {
   fetch(apiIndicateurUrl)
     .then((response) => response.json())
     .then((data) => {
+      console.log("Indicateurs récupérés :", data);
       existingIndicators.value = data;
     })
     .catch((error) => {
@@ -198,6 +200,7 @@ const resetForm = () => {
   showIndicatorOptions.value = false;
   showIndicatorForm.value = false;
 };
+
 </script>
 
 <style scoped>

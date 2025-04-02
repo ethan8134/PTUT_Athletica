@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
-
+@CrossOrigin(origins = "http://localhost:3002") // IMPORTANT : ton frontend tourne sur le port 3000
 @RestController
 @RequestMapping("/api/sessions")
 @Slf4j

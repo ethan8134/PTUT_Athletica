@@ -33,7 +33,7 @@ public class SessionService {
         return sessionRepository.findById(id)
                 .map(existing -> {
                     existing.setNom(session.getNom());
-                    existing.setDate(session.getDate());
+                    existing.setDateSession(session.getDateSession());
                     return sessionRepository.save(existing);
                 }).orElse(null);
     }

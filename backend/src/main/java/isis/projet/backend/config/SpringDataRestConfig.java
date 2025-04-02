@@ -24,5 +24,9 @@ public class SpringDataRestConfig
                 .stream()
                 .map(Type::getJavaType)
                 .toArray(Class[]::new));
+
+        cors.addMapping("/**")
+                .allowedOrigins("http://localhost:3003")
+                .allowedMethods("*");
     }
 }
