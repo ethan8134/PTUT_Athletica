@@ -1,7 +1,7 @@
 <template>
   <v-container class="button-container">
-    <v-list-item to="/AjouterIndicateur" class="redirect-btn">
-      <v-list-item-title>Enregistrer un nouvel indicateur</v-list-item-title>
+    <v-list-item to="/AjouterIndicateurGlobal" class="redirect-btn">
+    <v-list-item-title>Enregistrer un nouvel indicateur global</v-list-item-title>
     </v-list-item>
     <v-list-item to="/Indicateurs" class="redirect-btn">
       <v-list-item-title>Consulter mes Indicateurs</v-list-item-title>
