@@ -2,8 +2,8 @@
   <div class="list-container">
     <div class="search-container">
       <input
-        type="text"
         v-model="searchTerm"
+        type="text"
         placeholder="Rechercher un indicateur..."
       />
 
@@ -33,7 +33,6 @@
           <td v-if="!ind.editing">{{ ind.nom }}</td>
           <td v-else><input v-model="ind.nom" /></td>
 
-
           <td v-if="!ind.editing">{{ ind.unite }}</td>
           <td v-else><input v-model="ind.unite" /></td>
 
@@ -47,10 +46,24 @@
             <button v-else @click="updateIndicateur(ind)">Valider</button>
             <button v-if="ind.editing" @click="cancelEdit(ind)">Annuler</button>
             <button @click="() => deleteIndicateur(ind)">Supprimer</button>
+            <button v-if="ind.type === 'session'" @click="openMesureModal(ind)">➕ Ajouter valeur</button>
           </td>
         </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Modal pour ajouter une mesure -->
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal">
+        <h3>Ajouter une valeur à {{ currentIndicateur.nom }}</h3>
+        <input type="number" v-model="nouvelleMesure.valeur" placeholder="Valeur" />
+        <input type="date" v-model="nouvelleMesure.dateMesure" />
+        <div class="modal-buttons">
+          <button @click="ajouterMesure">Enregistrer</button>
+          <button @click="closeModal">Annuler</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -63,7 +76,9 @@ const indicateur = ref([]);
 const allIndicateurs = ref([]);
 const showDropdown = ref(false);
 const selectedType = ref("");
-const originalIndicateur = ref({});
+const showModal = ref(false);
+const currentIndicateur = ref(null);
+const nouvelleMesure = ref({ valeur: '', dateMesure: '' });
 
 function startEdit(ind) {
   ind.editing = true;
@@ -71,46 +86,43 @@ function startEdit(ind) {
 
 function cancelEdit(ind) {
   ind.editing = false;
-  getIndicateurs(); // Pour remettre à jour après annulation
+  getIndicateurs();
 }
+
 function getIndicateurs() {
   const fetchOptions = { method: "GET" };
 
-  // Fetch indicateurs globaux
   fetch("http://localhost:8989/api/indicateurGlobals", fetchOptions)
-    .then(response => response.json())
-    .then(dataGlobals => {
-      const globals = dataGlobals.map(ind => ({
+    .then((response) => response.json())
+    .then((dataGlobals) => {
+      const globals = dataGlobals.map((ind) => ({
         id: ind.idIndicateurGlobal,
         nom: ind.nom,
         unite: ind.unite,
-        categorie: { nom: "Global" }, // Pas de catégorie précise côté global, tu peux adapter
-        type: "global"
+        categorie: { nom: "Global" },
+        type: "global",
       }));
 
-      // Fetch indicateurs sessions
       fetch("http://localhost:8989/api/indicateurSessions", fetchOptions)
-        .then(response => response.json())
-        .then(dataSessions => {
-          const sessions = dataSessions.map(ind => ({
+        .then((response) => response.json())
+        .then((dataSessions) => {
+          const sessions = dataSessions.map((ind) => ({
             id: ind.idIndicateurSession,
             nom: ind.nom,
             unite: ind.unite,
-            categorie: ind.categorie || { nom: "Session" }, // Si pas de catégorie côté backend, adapter ici
-            type: "session"
+            categorie: ind.categorie || { nom: "Session" },
+            type: "session",
           }));
 
-          // Fusionner les deux listes
           allIndicateurs.value = [...globals, ...sessions];
           filterIndicateurs();
         });
     })
-    .catch(error => console.error("Erreur récupération indicateurs :", error));
+    .catch((error) => console.error("Erreur récupération indicateurs:", error));
 }
 
-
 function filterIndicateurs() {
-  indicateur.value = allIndicateurs.value.filter(ind => {
+  indicateur.value = allIndicateurs.value.filter((ind) => {
     const matchesSearch = searchTerm.value
       ? ind.nom.toLowerCase().includes(searchTerm.value.toLowerCase())
       : true;
@@ -135,19 +147,20 @@ function updateIndicateur(ind) {
   const updatedInd = {
     nom: ind.nom,
     unite: ind.unite,
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
     utilisateur: { idPersonne: 1 },
-    categorie: ind.type === "session" ? { idCategorie: ind.categorie?.idCategorie || 1 } : null
+    categorie: ind.type === "session" ? { idCategorie: ind.categorie?.idCategorie || 1 } : null,
   };
 
-  const url = ind.type === "global"
-    ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
-    : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
+  const url =
+    ind.type === "global"
+      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
+      : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
 
   const fetchOptions = {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedInd)
+    body: JSON.stringify(updatedInd),
   };
 
   fetch(url, fetchOptions)
@@ -157,10 +170,10 @@ function updateIndicateur(ind) {
     })
     .then(() => {
       ind.editing = false;
-      getIndicateurs(); // Recharge la liste
+      getIndicateurs();
       alert("Indicateur modifié !");
     })
-    .catch((error) => console.error("Erreur mise à jour :", error));
+    .catch((error) => console.error("Erreur mise à jour:", error));
 }
 
 function deleteIndicateur(ind) {
@@ -172,217 +185,195 @@ function deleteIndicateur(ind) {
       ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
       : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
 
-  const fetchOptions = { method: "DELETE" };
-  fetch(url, fetchOptions)
+  fetch(url, { method: "DELETE" })
     .then((response) => {
       if (!response.ok) throw new Error("Erreur suppression");
-      // Supprimer localement
       allIndicateurs.value = allIndicateurs.value.filter((i) => i.id !== ind.id);
       filterIndicateurs();
       alert("Indicateur supprimé !");
     })
-    .catch((error) => console.error("Erreur suppression :", error));
+    .catch((error) => console.error("Erreur suppression:", error));
+}
+
+function openMesureModal(ind) {
+  currentIndicateur.value = ind;
+  nouvelleMesure.value = { valeur: '', dateMesure: '' };
+  showModal.value = true;
+}
+
+function closeModal() {
+  showModal.value = false;
+  currentIndicateur.value = null;
+}
+
+function ajouterMesure() {
+  if (!nouvelleMesure.value.valeur || !nouvelleMesure.value.dateMesure) {
+    alert("Remplis bien tous les champs de la mesure.");
+    return;
+  }
+  const mesure = {
+    valeur: parseFloat(nouvelleMesure.value.valeur),
+    dateMesure: nouvelleMesure.value.dateMesure,
+    indicateurSession: { idIndicateurSession: currentIndicateur.value.id },
+  };
+
+  fetch("http://localhost:8989/api/mesures", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(mesure),
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
+      alert("Mesure ajoutée !");
+      closeModal();
+    })
+    .catch((err) => console.error("Erreur mesure:", err));
 }
 
 watch(searchTerm, filterIndicateurs);
 onMounted(getIndicateurs);
-
 </script>
 
-
 <style scoped>
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
-  margin: 0;
-  padding: 0;
-}
-
-.container {
-  width: 90%;
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  background: white;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-}
-
-button {
-  background-color: #007fff;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.3s ease-in-out;
-}
-
-table {
-  width: 100%;
-
-  background: lightgray;
-}
-
-.table-container td input {
-  padding: 5px;
-  border: 1px solid black;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
-  color: black;
-  vertical-align: middle;
-  height: 60px;
-}
-
-th {
-  background-color: #007fff;
-  color: white;
-}
-
-tr:nth-child(even) {
-  background: #f9f9f9;
-}
-
-img {
-  border-radius: 5px;
-  max-width: 50px;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 5px;
-  height: 100px;
-}
-
-.action-buttons button {
-  flex: 1;
-  padding: 8px 12px;
-  margin: auto 0px;
-  height: 40px;
-  width: 60px;
-  text-align: center;
-  border: solid;
-  border-color: black;
-  border-width: 1px;
-}
-
-.action-buttons button:hover {
-  background-color: darkblue;
-}
-
-.button-container {
-  margin-top: 15px;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
-
-.button-container button {
-  width: 100%;
-  max-width: 100%;
-  padding: 12px;
-  font-size: 18px;
-  background-color: #007fff;
-  border-radius: 5px;
-  border: none;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease-in-out;
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-
-.button-container button:hover {
-  background-color: darkblue;
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.list-container {
+  margin: 40px auto;
+  max-width: 1000px;
+  padding: 30px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .search-container {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
   gap: 10px;
-  margin: 20px auto;
-  width: 100%;
 }
 
 .search-container input {
   flex: 1;
-  max-width: 400px;
+  min-width: 250px;
   padding: 10px;
-  border: 1px solid black;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: border 0.3s ease-in-out;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
-.search-container input:focus {
-  outline: none;
-}
-
-.search-container button {
-  padding: 10px 15px;
-  font-size: 16px;
+.dropdown button {
   background-color: #007fff;
-  border: none;
-  border-radius: 5px;
   color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.3s ease-in-out;
-}
-
-.search-container button:hover {
-  background-color: darkblue;
-}
-
-.dropdown {
-  position: relative;
 }
 
 .dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
+  margin-top: 5px;
   background: white;
   border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: absolute;
   z-index: 10;
-  display: flex;
-  flex-direction: column;
   width: 200px;
 }
 
 .dropdown-menu button {
-  background: white;
-  color: black;
   padding: 10px;
-  border: none;
-  text-align: left;
   width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
   cursor: pointer;
-  transition: background 0.3s ease-in-out;
 }
 
-.dropdown-menu button:hover {
-  background: #007fff;
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.table-container th,
+.table-container td {
+  padding: 14px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.table-container th {
+  background-color: #007fff;
   color: white;
 }
 
-.list-container {
-  border: solid;
-  border-radius: 15px;
-  border-color: gray;
-  box-shadow: 2px 2px 2px gray;
-  margin-top: 15px;
-  padding: 5px;
-  border-width: 2px;
-  background-color: lightgray;
+.table-container tr:nth-child(even) {
+  background-color: #f3f7ff;
 }
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.action-buttons button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.action-buttons button:first-child {
+  background-color: #ffc107;
+  color: black;
+}
+
+.action-buttons button:nth-child(2) {
+  background-color: #28a745;
+  color: white;
+}
+
+.action-buttons button:nth-child(3) {
+  background-color: #6c757d;
+  color: white;
+}
+
+.action-buttons button:last-child {
+  background-color: #dc3545;
+  color: white;
+}
+
+.action-buttons button:hover {
+  opacity: 0.85;
+}
+
 </style>

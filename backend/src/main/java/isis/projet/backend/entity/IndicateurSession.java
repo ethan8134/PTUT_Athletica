@@ -25,8 +25,8 @@ public class IndicateurSession {
 
     @ManyToOne
     @JoinColumn(name = "id_session")
-    @JsonIgnore
     private Session session;
+
 
     @ManyToOne
     @JoinColumn(name = "id_categorie")
