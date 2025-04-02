@@ -1,12 +1,6 @@
 <template>
   <div class="list-container">
     <div class="search-container">
-      <input
-        v-model="searchTerm"
-        type="text"
-        placeholder="Rechercher un indicateur..."
-      />
-
       <div class="dropdown">
         <button @click="toggleDropdown">Filtrer Catégorie ▼</button>
         <div v-if="showDropdown" class="dropdown-menu">
@@ -29,351 +23,386 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="ind in indicateur" :key="ind.id">
-          <td v-if="!ind.editing">{{ ind.nom }}</td>
-          <td v-else><input v-model="ind.nom" /></td>
-
-          <td v-if="!ind.editing">{{ ind.unite }}</td>
-          <td v-else><input v-model="ind.unite" /></td>
-
-          <td v-if="!ind.editing">{{ ind.categorie.nom }}</td>
-          <td v-else><input v-model="ind.categorie.nom" /></td>
-
+        <tr v-for="ind in paginatedIndicateurs" :key="ind.id">
+          <td>{{ ind.nom }}</td>
+          <td>{{ ind.unite }}</td>
+          <td>{{ ind.categorie.nom }}</td>
           <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
-
           <td class="action-buttons">
-            <button v-if="!ind.editing" @click="startEdit(ind)">Modifier</button>
-            <button v-else @click="updateIndicateur(ind)">Valider</button>
-            <button v-if="ind.editing" @click="cancelEdit(ind)">Annuler</button>
-            <button @click="() => deleteIndicateur(ind)">Supprimer</button>
-            <button v-if="ind.type === 'session'" @click="openMesureModal(ind)">➕ Ajouter valeur</button>
+            <button @click="startEdit(ind)">Modifier</button>
+            <button @click="deleteIndicateur(ind)">Supprimer</button>
+            <button @click="ajouterValeur(ind)" class="ajouter-valeur">➕ Ajouter valeur</button>
           </td>
         </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Modal pour ajouter une mesure -->
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal">
-        <h3>Ajouter une valeur à {{ currentIndicateur.nom }}</h3>
-        <input type="number" v-model="nouvelleMesure.valeur" placeholder="Valeur" />
-        <input type="date" v-model="nouvelleMesure.dateMesure" />
-        <div class="modal-buttons">
-          <button @click="ajouterMesure">Enregistrer</button>
-          <button @click="closeModal">Annuler</button>
-        </div>
-      </div>
+    <div class="pagination-controls">
+      <button :disabled="currentPage === 1" @click="currentPage--">← Précédent</button>
+      <span>Page {{ currentPage }} / {{ totalPages }}</span>
+      <button :disabled="currentPage === totalPages" @click="currentPage++">Suivant →</button>
     </div>
+
+    <!-- Popup d'ajout de mesure -->
+    <v-dialog v-model="showPopup" max-width="500px">
+      <v-card>
+        <v-card-title class="headline">Ajouter une mesure</v-card-title>
+        <v-card-text>
+          <v-text-field
+            label="Valeur"
+            type="number"
+            v-model="newMesure.valeur"
+            required
+          />
+          <v-text-field
+            label="Date"
+            type="date"
+            v-model="newMesure.dateMesure"
+            required
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="blue" @click="validerMesure">Valider</v-btn>
+          <v-btn color="grey" @click="showPopup = false">Annuler</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
-const searchTerm = ref("");
+const router = useRouter();
 const indicateur = ref([]);
-const allIndicateurs = ref([]);
 const showDropdown = ref(false);
-const selectedType = ref("");
-const showModal = ref(false);
-const currentIndicateur = ref(null);
-const nouvelleMesure = ref({ valeur: '', dateMesure: '' });
+const selectedType = ref('');
+const currentPage = ref(1);
+const itemsPerPage = 5;
+
+const showPopup = ref(false);
+const selectedIndicateur = ref(null);
+const newMesure = ref({ valeur: '', dateMesure: '' });
+
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value;
+};
+
+const selectType = (type) => {
+  selectedType.value = type;
+  currentPage.value = 1;
+  filterIndicateurs();
+};
+
+const allIndicateurs = ref([]);
+
+function getIndicateurs() {
+  fetch("http://localhost:8989/api/indicateurGlobals")
+    .then(res => res.json())
+    .then(dataGlobals => {
+      const globals = dataGlobals.map(ind => ({
+        id: ind.idIndicateurGlobal,
+        nom: ind.nom,
+        unite: ind.unite,
+        categorie: { nom: "Global" },
+        type: "global"
+      }));
+      fetch("http://localhost:8989/api/indicateurSessions")
+        .then(res => res.json())
+        .then(dataSessions => {
+          const sessions = dataSessions.map(ind => ({
+            id: ind.idIndicateurSession,
+            nom: ind.nom,
+            unite: ind.unite,
+            categorie: ind.categorie || { nom: "Session" },
+            type: "session"
+          }));
+          allIndicateurs.value = [...globals, ...sessions];
+          filterIndicateurs();
+        });
+    });
+}
+
+function filterIndicateurs() {
+  indicateur.value = allIndicateurs.value.filter(ind =>
+    selectedType.value ? ind.type === selectedType.value : true
+  );
+}
+
+const totalPages = computed(() =>
+  Math.ceil(indicateur.value.length / itemsPerPage)
+);
+
+const paginatedIndicateurs = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return indicateur.value.slice(start, start + itemsPerPage);
+});
 
 function startEdit(ind) {
   ind.editing = true;
 }
 
-function cancelEdit(ind) {
-  ind.editing = false;
-  getIndicateurs();
-}
-
-function getIndicateurs() {
-  const fetchOptions = { method: "GET" };
-
-  fetch("http://localhost:8989/api/indicateurGlobals", fetchOptions)
-    .then((response) => response.json())
-    .then((dataGlobals) => {
-      const globals = dataGlobals.map((ind) => ({
-        id: ind.idIndicateurGlobal,
-        nom: ind.nom,
-        unite: ind.unite,
-        categorie: { nom: "Global" },
-        type: "global",
-      }));
-
-      fetch("http://localhost:8989/api/indicateurSessions", fetchOptions)
-        .then((response) => response.json())
-        .then((dataSessions) => {
-          const sessions = dataSessions.map((ind) => ({
-            id: ind.idIndicateurSession,
-            nom: ind.nom,
-            unite: ind.unite,
-            categorie: ind.categorie || { nom: "Session" },
-            type: "session",
-          }));
-
-          allIndicateurs.value = [...globals, ...sessions];
-          filterIndicateurs();
-        });
-    })
-    .catch((error) => console.error("Erreur récupération indicateurs:", error));
-}
-
-function filterIndicateurs() {
-  indicateur.value = allIndicateurs.value.filter((ind) => {
-    const matchesSearch = searchTerm.value
-      ? ind.nom.toLowerCase().includes(searchTerm.value.toLowerCase())
-      : true;
-    const matchesType = selectedType.value
-      ? ind.type === selectedType.value
-      : true;
-    return matchesSearch && matchesType;
-  });
-}
-
-function toggleDropdown() {
-  showDropdown.value = !showDropdown.value;
-}
-
-function selectType(type) {
-  selectedType.value = type;
-  showDropdown.value = false;
-  filterIndicateurs();
-}
-
-function updateIndicateur(ind) {
-  const updatedInd = {
-    nom: ind.nom,
-    unite: ind.unite,
-    date: new Date().toISOString().split("T")[0],
-    utilisateur: { idPersonne: 1 },
-    categorie: ind.type === "session" ? { idCategorie: ind.categorie?.idCategorie || 1 } : null,
-  };
-
-  const url =
-    ind.type === "global"
-      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
-      : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
-
-  const fetchOptions = {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedInd),
-  };
-
-  fetch(url, fetchOptions)
-    .then((response) => {
-      if (!response.ok) throw new Error("Erreur mise à jour");
-      return response.json();
-    })
-    .then(() => {
-      ind.editing = false;
-      getIndicateurs();
-      alert("Indicateur modifié !");
-    })
-    .catch((error) => console.error("Erreur mise à jour:", error));
-}
-
 function deleteIndicateur(ind) {
-  if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet indicateur ?")) {
-    return;
-  }
-  const url =
-    ind.type === "global"
-      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
-      : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
+  const url = ind.type === 'global'
+    ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
+    : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
 
-  fetch(url, { method: "DELETE" })
-    .then((response) => {
-      if (!response.ok) throw new Error("Erreur suppression");
-      allIndicateurs.value = allIndicateurs.value.filter((i) => i.id !== ind.id);
+  fetch(url, { method: 'DELETE' })
+    .then(res => {
+      if (!res.ok) throw new Error();
+      allIndicateurs.value = allIndicateurs.value.filter(i => i.id !== ind.id);
       filterIndicateurs();
-      alert("Indicateur supprimé !");
-    })
-    .catch((error) => console.error("Erreur suppression:", error));
+    });
 }
 
-function openMesureModal(ind) {
-  currentIndicateur.value = ind;
-  nouvelleMesure.value = { valeur: '', dateMesure: '' };
-  showModal.value = true;
-}
-
-function closeModal() {
-  showModal.value = false;
-  currentIndicateur.value = null;
-}
-
-function ajouterMesure() {
-  if (!nouvelleMesure.value.valeur || !nouvelleMesure.value.dateMesure) {
-    alert("Remplis bien tous les champs de la mesure.");
+function ajouterValeur(ind) {
+  if (ind.type !== 'session') {
+    alert("Seuls les indicateurs de session peuvent recevoir des mesures.");
     return;
   }
-  const mesure = {
-    valeur: parseFloat(nouvelleMesure.value.valeur),
-    dateMesure: nouvelleMesure.value.dateMesure,
-    indicateurSession: { idIndicateurSession: currentIndicateur.value.id },
+  selectedIndicateur.value = ind;
+  newMesure.value = { valeur: '', dateMesure: '' };
+  showPopup.value = true;
+}
+
+function validerMesure() {
+  if (!newMesure.value.valeur || !newMesure.value.dateMesure) {
+    alert("Veuillez remplir tous les champs.");
+    return;
+  }
+
+  const body = {
+    valeur: parseFloat(newMesure.value.valeur),
+    dateMesure: newMesure.value.dateMesure,
+    indicateurSession: { idIndicateurSession: selectedIndicateur.value.id },
   };
 
   fetch("http://localhost:8989/api/mesures", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(mesure),
+    body: JSON.stringify(body),
   })
     .then((res) => {
-      if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
-      alert("Mesure ajoutée !");
-      closeModal();
+      if (!res.ok) throw new Error("Erreur API");
+      return res.json();
     })
-    .catch((err) => console.error("Erreur mesure:", err));
+    .then(() => {
+      alert("✅ Mesure ajoutée !");
+      showPopup.value = false;
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("❌ Une erreur est survenue.");
+    });
 }
 
-watch(searchTerm, filterIndicateurs);
 onMounted(getIndicateurs);
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-.modal {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  min-width: 300px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.modal-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
 .list-container {
-  margin: 40px auto;
-  max-width: 1000px;
-  padding: 30px;
+  border: solid;
+  border-radius: 15px;
+  border-color: gray;
+  box-shadow: 2px 2px 2px gray;
+  margin: 30px auto;
+  padding: 20px;
+  border-width: 2px;
   background-color: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
 }
 
 .search-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
   gap: 10px;
+  margin-bottom: 20px;
 }
 
-.search-container input {
-  flex: 1;
-  min-width: 250px;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.dropdown {
+  position: relative;
 }
 
 .dropdown button {
+  padding: 10px 15px;
+  font-size: 16px;
   background-color: #007fff;
   color: white;
   border: none;
-  padding: 10px 14px;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
 }
 
 .dropdown-menu {
-  margin-top: 5px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   position: absolute;
-  z-index: 10;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
   width: 200px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .dropdown-menu button {
-  padding: 10px;
-  width: 100%;
-  border: none;
   background: none;
+  border: none;
+  padding: 10px;
   text-align: left;
   cursor: pointer;
-}
-
-.table-container table {
   width: 100%;
-  border-collapse: collapse;
-  background: white;
 }
 
-.table-container th,
-.table-container td {
-  padding: 14px;
-  text-align: center;
-  border-bottom: 1px solid #ddd;
-}
-
-.table-container th {
+.dropdown-menu button:hover {
   background-color: #007fff;
   color: white;
 }
 
-.table-container tr:nth-child(even) {
-  background-color: #f3f7ff;
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+th, td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background-color: #007fff;
+  color: white;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
 }
 
 .action-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  justify-content: center;
 }
 
 .action-buttons button {
-  padding: 6px 10px;
-  border: none;
+  padding: 8px 12px;
   border-radius: 4px;
+  border: none;
   cursor: pointer;
-  font-weight: 500;
+  font-size: 14px;
 }
 
-.action-buttons button:first-child {
+.action-buttons button:nth-child(1) {
   background-color: #ffc107;
   color: black;
 }
 
 .action-buttons button:nth-child(2) {
-  background-color: #28a745;
-  color: white;
-}
-
-.action-buttons button:nth-child(3) {
-  background-color: #6c757d;
-  color: white;
-}
-
-.action-buttons button:last-child {
   background-color: #dc3545;
   color: white;
 }
 
-.action-buttons button:hover {
-  opacity: 0.85;
+.action-buttons .ajouter-valeur {
+  background-color: #28a745;
+  color: white;
 }
 
+.action-buttons .ajouter-valeur:hover {
+  background-color: #218838;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  gap: 20px;
+}
+
+.pagination-controls button {
+  padding: 8px 16px;
+  background-color: #007fff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination-controls button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 🔽 Style du popup */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background-color: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0px 6px 10px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal h3 {
+  margin-top: 0;
+}
+
+.modal input {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.modal button {
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal .valider {
+  background-color: #28a745;
+  color: white;
+}
+
+.modal .annuler {
+  background-color: #dc3545;
+  color: white;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
 </style>
