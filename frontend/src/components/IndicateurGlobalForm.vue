@@ -1,0 +1,107 @@
+<template>
+  <div class="indicateur-global-form">
+    <h2>📊 Ajouter un indicateur global</h2>
+    <form @submit.prevent="submitForm">
+      <div class="form-group">
+        <label>Nom de l'indicateur</label>
+        <input v-model="indicateur.nom" placeholder="Ex: Poids" required />
+      </div>
+
+      <div class="form-group">
+        <label>Unité</label>
+        <input v-model="indicateur.unite" placeholder="Ex: kg" required />
+      </div>
+
+      <div class="form-group">
+        <label>Catégorie</label>
+        <input v-model="indicateur.categorie" placeholder="Ex: Forme physique" required />
+      </div>
+
+      <div class="form-buttons">
+        <button class="btn-primary" type="submit">✅ Valider</button>
+        <button class="btn-cancel" type="button" @click="cancelForm">Annuler</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const indicateur = ref({
+  nom: '',
+  unite: '',
+  categorie: '',
+});
+
+const submitForm = async () => {
+  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.categorie) {
+    alert('Veuillez remplir tous les champs.');
+    return;
+  }
+
+  const body = {
+    nom: indicateur.value.nom,
+    unite: indicateur.value.unite,
+    date: new Date().toISOString().split('T')[0],
+    categorie: { idCategorie: 1 },
+    utilisateur: { idPersonne: 1 },
+  };
+
+  try {
+    const res = await fetch('http://localhost:8989/api/indicateurGlobals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) throw new Error('Erreur lors de la création');
+    alert('✅ Indicateur global créé !');
+    router.push('/');
+  } catch (err) {
+    console.error(err);
+    alert('Une erreur s’est produite.');
+  }
+};
+
+const cancelForm = () => {
+  router.push('/');
+};
+</script>
+
+<style scoped>
+.indicateur-global-form {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: lightgrey;
+  border-radius: 8px;
+}
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+.form-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+.btn-primary {
+  background-color: #28a745;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+}
+.btn-cancel {
+  background-color: #dc3545;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+}
+</style>
