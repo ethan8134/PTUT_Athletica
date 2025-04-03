@@ -2,45 +2,23 @@
   <v-container class="progressions-container">
     <h2 class="text-h5 font-weight-bold mb-6 text-center">📈 Mes Progressions</h2>
 
-    <v-row>
+    <v-row v-if="indicateurSessions.length">
       <v-col
         v-for="ind in indicateurSessions"
         :key="ind.id"
         cols="12"
         sm="6"
-        md="4"
+        md="6"
+        class="mb-6"
       >
-        <v-card elevation="2" class="pa-4 rounded-xl">
-          <div class="text-subtitle-1 font-weight-bold mb-1">{{ ind.nom }}</div>
-          <div class="text-caption text-grey mb-3">
-            {{ ind.categorie?.nom || ind.categorie }}
-          </div>
-
-          <v-list density="compact" class="progress-list">
-            <v-list-item
-              v-for="mesure in mesuresParIndicateur[ind.id]"
-              :key="mesure.id"
-              class="d-flex flex-column"
-            >
-              <div class="d-flex justify-space-between align-center mb-1">
-                <span class="text-caption">{{ mesure.dateMesure }}</span>
-                <span class="text-caption font-weight-medium">{{ mesure.valeur }}</span>
-              </div>
-              <v-progress-linear
-                :model-value="mesure.valeur"
-                height="6"
-                color="primary"
-                rounded
-              />
-            </v-list-item>
-          </v-list>
-
-          <div
-            v-if="!mesuresParIndicateur[ind.id] || mesuresParIndicateur[ind.id].length === 0"
-            class="text-caption text-grey mt-2"
-          >
-            Aucune mesure enregistrée.
-          </div>
+        <v-card elevation="2" class="pa-4 rounded-xl" color="grey-lighten-4">
+          <ApexChart
+            width="100%"
+            height="300"
+            type="bar"
+            :options="getChartConfig(ind).options"
+            :series="getChartConfig(ind).series"
+          />
         </v-card>
       </v-col>
     </v-row>
@@ -49,6 +27,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import ApexChart from 'vue3-apexcharts';
 
 const indicateurSessions = ref([]);
 const mesuresParIndicateur = ref({});
@@ -74,23 +53,46 @@ onMounted(() => {
     .then((data) => {
       indicateurSessions.value = data.map((ind) => ({
         ...ind,
-        id: ind.idIndicateurSession,
+        id: ind.idIndicateurSession
       }));
 
-      indicateurSessions.value.forEach((ind) => {
-        fetchMesuresForIndicateur(ind.id);
-      });
+      indicateurSessions.value.forEach((ind) => fetchMesuresForIndicateur(ind.id));
     })
     .catch((err) => console.error('Erreur récupération indicateurs session:', err));
 });
+
+const getChartConfig = (ind) => {
+  if (!ind || !mesuresParIndicateur.value[ind.id]) return { series: [], options: {} };
+
+  const mesures = mesuresParIndicateur.value[ind.id];
+
+  const series = [
+    {
+      name: ind.nom,
+      data: mesures.map((m) => ({
+        x: m.dateMesure,
+        y: m.valeur
+      }))
+    }
+  ];
+
+  const options = {
+    chart: { type: 'bar' },
+    title: {
+      text: `${ind.nom} - Session : ${ind.session?.nom || 'Non défini'}`,
+      align: 'center'
+    },
+    xaxis: { title: { text: 'Date' }, type: 'category' },
+    yaxis: { title: { text: 'Valeur mesurée' } },
+    dataLabels: { enabled: true }
+  };
+
+  return { series, options };
+};
 </script>
 
 <style scoped>
 .progressions-container {
   padding-top: 32px;
-}
-
-.progress-list {
-  background-color: transparent;
 }
 </style>
