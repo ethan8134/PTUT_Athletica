@@ -33,84 +33,89 @@
         <button class="cancel-btn" type="button" @click="cancelForm"> Annuler</button>
       </div>
     </form>
-  </div>
+    <div v-if="sessionId">
+      <hr style="margin-top: 30px; margin-bottom: 20px;" />
 
-  <!-- Associer un indicateur existant -->
-  <div v-if="sessionId" class="existing-indicators">
-    <h3>Ou associer un indicateur existant</h3>
-    <ul>
-      <li
-        v-for="ind in indicateursSessionExistants"
-        :key="ind.idIndicateurSession"
-        class="indicator-item"
-      >
-        <span>{{ ind.nom }} ({{ ind.unite }})</span>
-        <input v-model="ind.newValeur" placeholder="Valeur" type="number" class="measure-input" />
-        <input v-model="ind.newDate" placeholder="Date" type="date" class="measure-input" />
-        <button @click="associerIndicateurExist(ind)">Associer</button>
-      </li>
-    </ul>
+      <h3>📌 Ajouter une mesure à un indicateur existant</h3>
+
+      <v-select
+        label="Indicateur existant"
+        :items="indicateursExistants"
+        item-title="nom"
+        item-value="idIndicateurSession"
+        v-model="selectedIndicateurId"
+        required
+      />
+
+      <v-text-field
+        label="Valeur"
+        v-model="mesureExistante.valeur"
+        type="number"
+      />
+
+      <v-text-field
+        label="Date"
+        v-model="mesureExistante.dateMesure"
+        type="date"
+      />
+
+      <v-btn color="green" @click="ajouterValeurExistante">✅ Ajouter la valeur</v-btn>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
-const sessionId = route.query.sessionId;
+const sessionId = route.query.sessionId; //
+import { onMounted } from "vue";
 
-const indicateursSessionExistants = ref([]);
+const selectedIndicateurId = ref(null);
+const mesureExistante = ref({ valeur: "", dateMesure: "" });
+const indicateursExistants = ref([]);
 
 onMounted(() => {
-  if (sessionId) fetchIndicateursSessions();
-});
-
-const fetchIndicateursSessions = () => {
   fetch("http://localhost:8989/api/indicateurSessions")
     .then(res => res.json())
     .then(data => {
-      indicateursSessionExistants.value = data
-        .filter(i => !i.session)
-        .map(i => ({ ...i, newValeur: "", newDate: "" }));
+      indicateursExistants.value = data; // ✅ on ne filtre plus par session
     });
-};
+});
 
-const associerIndicateurExist = async (ind) => {
-  if (!ind.newValeur || !ind.newDate) {
-    alert("Remplis bien la valeur et la date !");
+
+const ajouterValeurExistante = () => {
+  if (!selectedIndicateurId.value || !mesureExistante.value.valeur || !mesureExistante.value.dateMesure) {
+    alert("Veuillez remplir tous les champs.");
     return;
   }
 
-  try {
-    await fetch(`http://localhost:8989/api/indicateurSessions/${ind.idIndicateurSession}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...ind,
-        session: { idSession: parseInt(sessionId) },
-      }),
+  const body = {
+    valeur: parseFloat(mesureExistante.value.valeur),
+    dateMesure: mesureExistante.value.dateMesure,
+    indicateurSession: { idIndicateurSession: selectedIndicateurId.value },
+    session: { idSession: parseInt(sessionId) }
+  };
+
+  fetch("http://localhost:8989/api/mesures", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
+      alert("✅ Valeur ajoutée à l’indicateur !");
+      mesureExistante.value = { valeur: "", dateMesure: "" };
+    })
+    .catch(err => {
+      console.error(err);
+      alert("❌ Une erreur est survenue : " + err.message);
     });
-
-    await fetch("http://localhost:8989/api/mesures", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        valeur: parseFloat(ind.newValeur),
-        dateMesure: ind.newDate,
-        indicateurSession: { idIndicateurSession: ind.idIndicateurSession },
-      }),
-    });
-
-    alert("✅ Indicateur associé avec mesure !");
-    fetchIndicateursSessions();
-
-  } catch (err) {
-    console.error("Erreur association :", err);
-    alert("❌ Échec association !");
-  }
 };
+// 💡 utilisé uniquement pour la mesure
 
 const indicateur = ref({
   nom: "",
@@ -129,37 +134,54 @@ const submitForm = async () => {
     return;
   }
 
-  const bodyIndicateur = {
-    nom: indicateur.value.nom,
-    unite: indicateur.value.unite,
-    date: new Date().toISOString().split('T')[0],
-    categorie: { idCategorie: 1 },
-    utilisateur: { idPersonne: 1 },
-    session: sessionId ? { idSession: parseInt(sessionId) } : null,
-  };
-
-  if (!bodyIndicateur.session) {
-    alert("Aucune session associée, impossible de continuer.");
-    return;
-  }
-
   try {
+    // First create the indicator
+    const bodyIndicateur = {
+      nom: indicateur.value.nom,
+      unite: indicateur.value.unite,
+      date: new Date().toISOString().split('T')[0],
+      categorie: { idCategorie: 1 },
+      utilisateur: { idPersonne: 1 },
+      session: sessionId ? { idSession: parseInt(sessionId) } : null
+    };
+
+
+    console.log("Sending indicator data:", bodyIndicateur);
+
     const res = await fetch("http://localhost:8989/api/indicateurSessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bodyIndicateur),
     });
 
-    if (!res.ok) throw new Error("Erreur indicateur");
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Server response:", errorText);
+      throw new Error(`Error creating indicator: ${res.status} ${res.statusText}`);
+    }
 
     const created = await res.json();
+    console.log("Created indicator:", created);
 
-    if (mesure.value.valeur && mesure.value.dateMesure) {
+    if (sessionId) {
+      fetch("http://localhost:8989/api/indicateurSessions")
+        .then(res => res.json())
+        .then(data => {
+          indicateursExistants.value = data;
+        });
+    }
+
+
+    // Create measurement if needed
+    if (sessionId && mesure.value.valeur && mesure.value.dateMesure) {
       const bodyMesure = {
         valeur: parseFloat(mesure.value.valeur),
         dateMesure: mesure.value.dateMesure,
         indicateurSession: { idIndicateurSession: created.idIndicateurSession },
+        session: { idSession: parseInt(sessionId) }
       };
+
+      console.log("Sending measurement data:", bodyMesure);
 
       const resMesure = await fetch("http://localhost:8989/api/mesures", {
         method: "POST",
@@ -167,15 +189,20 @@ const submitForm = async () => {
         body: JSON.stringify(bodyMesure),
       });
 
-      if (!resMesure.ok) throw new Error("Erreur mesure");
+      if (!resMesure.ok) {
+        const errorText = await resMesure.text();
+        console.error("Server response for measurement:", errorText);
+        throw new Error(`Error creating measurement: ${resMesure.status} ${resMesure.statusText}`);
+      }
     }
 
-    alert("✅ Indicateur (et mesure) créé !");
+    alert("✅ Indicateur (et mesure si possible) créé !");
     router.push("/");
   } catch (err) {
-    console.error("Erreur :", err);
-    alert("Une erreur s’est produite.");
+    console.error("Erreur complète:", err);
+    alert(`Une erreur s'est produite: ${err.message}`);
   }
+
 };
 
 const cancelForm = () => {
@@ -184,6 +211,7 @@ const cancelForm = () => {
 </script>
 
 <style scoped>
+/* même style que tu avais déjà */
 .indicateur-form-container {
   max-width: 600px;
   margin: 20px auto;
@@ -212,36 +240,5 @@ const cancelForm = () => {
   color: white;
   padding: 10px;
   border: none;
-}
-.existing-indicators {
-  margin-top: 30px;
-  padding: 15px;
-  background: #f5f5f5;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-.indicator-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 8px 0;
-  gap: 10px;
-}
-.indicator-item button {
-  background-color: #007fff;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.indicator-item button:hover {
-  background-color: #005bb5;
-}
-.measure-input {
-  padding: 6px;
-  border-radius: 4px;
-  border: 1px solid #999;
-  width: 110px;
 }
 </style>

@@ -2,7 +2,7 @@
   <div class="list-container">
     <div class="search-container">
       <div class="dropdown">
-        <button @click="toggleDropdown">Filtrer Catégorie ▼</button>
+        <button @click="toggleDropdown">{{ labelType }} ▼</button>
         <div v-if="showDropdown" class="dropdown-menu">
           <button @click="selectType('')">Toutes catégories</button>
           <button @click="selectType('global')">Indicateurs Globaux</button>
@@ -24,15 +24,33 @@
         </thead>
         <tbody>
         <tr v-for="ind in paginatedIndicateurs" :key="ind.id">
-          <td>{{ ind.nom }}</td>
-          <td>{{ ind.unite }}</td>
-          <td>{{ ind.categorie.nom }}</td>
-          <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
-          <td class="action-buttons">
-            <button @click="startEdit(ind)">Modifier</button>
-            <button @click="deleteIndicateur(ind)">Supprimer</button>
-            <button @click="ajouterValeur(ind)" class="ajouter-valeur">➕ Ajouter valeur</button>
-          </td>
+          <template v-if="ind.editing">
+            <td><input v-model="ind.nom" /></td>
+            <td><input v-model="ind.unite" /></td>
+            <td><input v-model="ind.categorie.nom" /></td>
+            <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
+            <td class="action-buttons">
+              <button @click="saveEdit(ind)">💾 Enregistrer</button>
+              <button @click="ind.editing = false">Annuler</button>
+            </td>
+          </template>
+          <template v-else>
+            <td>{{ ind.nom }}</td>
+            <td>{{ ind.unite }}</td>
+            <td>{{ ind.categorie.nom }}</td>
+            <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
+            <td class="action-buttons">
+              <button @click="startEdit(ind)">Modifier</button>
+              <button @click="deleteIndicateur(ind)">Supprimer</button>
+              <button
+                v-if="ind.type === 'global'"
+                @click="ajouterValeur(ind)"
+                class="ajouter-valeur"
+              >
+                ➕ Ajouter valeur
+              </button>
+            </td>
+          </template>
         </tr>
         </tbody>
       </table>
@@ -49,18 +67,8 @@
       <v-card>
         <v-card-title class="headline">Ajouter une mesure</v-card-title>
         <v-card-text>
-          <v-text-field
-            label="Valeur"
-            type="number"
-            v-model="newMesure.valeur"
-            required
-          />
-          <v-text-field
-            label="Date"
-            type="date"
-            v-model="newMesure.dateMesure"
-            required
-          />
+          <v-text-field label="Valeur" type="number" v-model="newMesure.valeur" required />
+          <v-text-field label="Date" type="date" v-model="newMesure.dateMesure" required />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -74,12 +82,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 
-const router = useRouter();
 const indicateur = ref([]);
 const showDropdown = ref(false);
 const selectedType = ref('');
+const labelType = ref('Filtrer Catégorie');
 const currentPage = ref(1);
 const itemsPerPage = 5;
 
@@ -94,6 +101,17 @@ const toggleDropdown = () => {
 const selectType = (type) => {
   selectedType.value = type;
   currentPage.value = 1;
+  showDropdown.value = false;
+
+  // Mise à jour du texte affiché
+  if (type === '') {
+    labelType.value = 'Toutes catégories';
+  } else if (type === 'global') {
+    labelType.value = 'Indicateurs Globaux';
+  } else if (type === 'session') {
+    labelType.value = 'Indicateurs Session';
+  }
+
   filterIndicateurs();
 };
 
@@ -145,6 +163,33 @@ function startEdit(ind) {
   ind.editing = true;
 }
 
+function saveEdit(ind) {
+  const url = ind.type === 'global'
+    ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
+    : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
+
+  const body = {
+    nom: ind.nom,
+    unite: ind.unite,
+    categorie: { nom: ind.categorie.nom }
+  };
+
+  fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Erreur update");
+      ind.editing = false;
+      alert("✅ Modification enregistrée !");
+    })
+    .catch(err => {
+      console.error(err);
+      alert("❌ Une erreur est survenue.");
+    });
+}
+
 function deleteIndicateur(ind) {
   const url = ind.type === 'global'
     ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
@@ -153,16 +198,12 @@ function deleteIndicateur(ind) {
   fetch(url, { method: 'DELETE' })
     .then(res => {
       if (!res.ok) throw new Error();
-      allIndicateurs.value = allIndicateurs.value.filter(i => i.id !== ind.id);
+      allIndicateurs.value = allIndicateurs.value.filter(i => i.id !== ind.id || i.type !== ind.type);
       filterIndicateurs();
     });
 }
 
 function ajouterValeur(ind) {
-  if (ind.type !== 'session') {
-    alert("Seuls les indicateurs de session peuvent recevoir des mesures.");
-    return;
-  }
   selectedIndicateur.value = ind;
   newMesure.value = { valeur: '', dateMesure: '' };
   showPopup.value = true;
@@ -174,11 +215,31 @@ function validerMesure() {
     return;
   }
 
-  const body = {
-    valeur: parseFloat(newMesure.value.valeur),
-    dateMesure: newMesure.value.dateMesure,
-    indicateurSession: { idIndicateurSession: selectedIndicateur.value.id },
-  };
+  // Format date in ISO format to ensure compatibility
+  const formattedDate = new Date(newMesure.value.dateMesure).toISOString().split('T')[0];
+
+  // Create the request body with the proper structure
+  let body;
+  if (selectedIndicateur.value.type === 'global') {
+    body = {
+      valeur: parseFloat(newMesure.value.valeur),
+      dateMesure: formattedDate,
+      indicateurGlobal: {
+        idIndicateurGlobal: selectedIndicateur.value.id
+      }
+    };
+  } else {
+    body = {
+      valeur: parseFloat(newMesure.value.valeur),
+      dateMesure: formattedDate,
+      indicateurSession: {
+        idIndicateurSession: selectedIndicateur.value.id
+      }
+    };
+  }
+
+  // Add console.log to see what's being sent
+  console.log("Sending data:", JSON.stringify(body));
 
   fetch("http://localhost:8989/api/mesures", {
     method: "POST",
@@ -186,7 +247,12 @@ function validerMesure() {
     body: JSON.stringify(body),
   })
     .then((res) => {
-      if (!res.ok) throw new Error("Erreur API");
+      if (!res.ok) {
+        // Get more info about the error
+        return res.text().then(text => {
+          throw new Error(`Erreur API: ${text}`);
+        });
+      }
       return res.json();
     })
     .then(() => {
@@ -194,8 +260,8 @@ function validerMesure() {
       showPopup.value = false;
     })
     .catch((err) => {
-      console.error(err);
-      alert("❌ Une erreur est survenue.");
+      console.error("Detailed error:", err);
+      alert(`❌ Une erreur est survenue: ${err.message}`);
     });
 }
 
@@ -258,6 +324,7 @@ onMounted(getIndicateurs);
   text-align: left;
   cursor: pointer;
   width: 100%;
+  color: black;
 }
 
 .dropdown-menu button:hover {

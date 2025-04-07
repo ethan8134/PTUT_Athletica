@@ -12,9 +12,11 @@
         <input v-model="indicateur.unite" placeholder="Ex: kg" required />
       </div>
 
+
+
       <div class="form-group">
-        <label>Catégorie</label>
-        <input v-model="indicateur.categorie" placeholder="Ex: Forme physique" required />
+        <label>Date</label>
+        <input type="date" v-model="indicateur.date" required />
       </div>
 
       <div class="form-buttons">
@@ -26,51 +28,51 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const router = useRouter();
+const router = useRouter()
 
 const indicateur = ref({
   nom: '',
   unite: '',
-  categorie: '',
-});
+  date: '',
+})
 
 const submitForm = async () => {
-  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.categorie) {
-    alert('Veuillez remplir tous les champs.');
-    return;
+  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.date) {
+    alert('Veuillez remplir tous les champs.')
+    return
   }
 
   const body = {
     nom: indicateur.value.nom,
     unite: indicateur.value.unite,
-    date: new Date().toISOString().split('T')[0],
-    categorie: { idCategorie: 1 },
-    utilisateur: { idPersonne: 1 },
-  };
+    date: indicateur.value.date,
+    utilisateur: { idPersonne: 1 }, // ✅ ok si l'utilisateur est fixe
+  }
 
   try {
     const res = await fetch('http://localhost:8989/api/indicateurGlobals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    });
+    })
 
-    if (!res.ok) throw new Error('Erreur lors de la création');
-    alert('✅ Indicateur global créé !');
-    router.push('/');
+    if (!res.ok) throw new Error('Erreur lors de la création')
+    alert('✅ Indicateur global créé !')
+    router.push('/')
   } catch (err) {
-    console.error(err);
-    alert('Une erreur s’est produite.');
+    console.error(err)
+    alert('❌ Une erreur s’est produite.')
   }
-};
+}
 
 const cancelForm = () => {
-  router.push('/');
-};
+  router.push('/')
+}
 </script>
+
 
 <style scoped>
 .indicateur-global-form {
