@@ -1,44 +1,115 @@
 <template>
   <v-container class="button-container">
-    <v-list-item to="/AjouterIndicateurGlobal" class="redirect-btn">
-      <v-list-item-title
-        >Enregistrer un nouvel indicateur global</v-list-item-title
-      >
-    </v-list-item>
-    <v-list-item to="/Indicateurs" class="redirect-btn">
-      <v-list-item-title>Consulter mes Indicateurs</v-list-item-title>
-    </v-list-item>
+    <router-link to="/AjouterIndicateurGlobal" class="redirect-btn">
+      Enregistrer un nouvel indicateur global
+    </router-link>
+
+    <router-link to="/AjouterIndicateur" class="redirect-btn">
+      Créer un indicateur de session
+    </router-link>
+
+    <router-link to="/Indicateurs" class="redirect-btn">
+      Consulter mes Indicateurs
+    </router-link>
   </v-container>
 </template>
 
-<script setup></script>
+<script setup>
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
+const sessionId = route.query.sessionId;
+
+const indicateur = ref({
+  nom: "",
+  unite: "",
+  categorie: ""
+});
+
+const mesure = ref({
+  valeur: "",
+  dateMesure: ""
+});
+
+const submitForm = async () => {
+  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.categorie) {
+    alert("Remplis bien tous les champs !");
+    return;
+  }
+
+  // ✅ Création sans session
+  const bodyIndicateur = {
+    nom: indicateur.value.nom,
+    unite: indicateur.value.unite,
+    date: new Date().toISOString().split("T")[0],
+    categorie: { idCategorie: 1 },
+    utilisateur: { idPersonne: 1 }
+  };
+
+  try {
+    const res = await fetch("http://localhost:8989/api/indicateurSessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bodyIndicateur)
+    });
+
+    if (!res.ok) throw new Error("Erreur indicateur");
+
+    const created = await res.json();
+
+    // 💡 Ajout de mesure liée à une session
+    if (mesure.value.valeur && mesure.value.dateMesure && sessionId) {
+      const bodyMesure = {
+        valeur: parseFloat(mesure.value.valeur),
+        dateMesure: mesure.value.dateMesure,
+        indicateurSession: { idIndicateurSession: created.idIndicateurSession },
+        session: { idSession: parseInt(sessionId) }
+      };
+
+      const resMesure = await fetch("http://localhost:8989/api/mesures", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyMesure)
+      });
+
+      if (!resMesure.ok) throw new Error("Erreur mesure");
+    }
+
+    alert("✅ Indicateur créé !");
+    router.push("/");
+  } catch (err) {
+    console.error("Erreur :", err);
+    alert("Une erreur s’est produite.");
+  }
+};
+</script>
+
+
 
 <style scoped>
 .button-container {
   display: flex;
-  justify-content: space-evenly; /* Répartit les éléments avec un espace égal */
-  align-items: center;
-  margin: 0;
-  gap: 16px; /* Optionnel : ajoute un espace fixe entre les boutons */
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 40px 0;
 }
 
-/* Style personnalisé pour rendre le bouton compact et visible */
+/* Style des boutons */
 .redirect-btn {
-  display: flex;
-  width: 330px;
-  height: 170px;
-  justify-content: center;
-  padding: 8px 16px;
-  background-color: #0e0c70;
-  color: #ccc;
-  text-align: center;
-  font-weight: bold;
+  padding: 14px 24px;
+  background-color: #007fff;
+  color: white;
+  border-radius: 8px;
   text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
   transition: background-color 0.3s ease;
   border-radius: 150px;
 }
 
-/* Changement de couleur au survol */
 .redirect-btn:hover {
   background-color: #005bb5;
 }

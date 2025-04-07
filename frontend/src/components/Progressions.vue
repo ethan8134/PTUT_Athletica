@@ -1,46 +1,35 @@
 <template>
   <v-container class="progressions-container">
-    <h2 class="text-h5 font-weight-bold mb-6 text-center">📈 Mes Progressions</h2>
+    <h2 class="text-h5 font-weight-bold mb-6 text-center">📊 Mes Progressions</h2>
+
+    <v-select
+      v-model="selectedIndicateurIds"
+      :items="indicateurs"
+      item-title="nom"
+      item-value="id"
+      label="Choisir un ou plusieurs indicateurs"
+      class="mb-6"
+      multiple
+      clearable
+    />
 
     <v-row>
       <v-col
-        v-for="ind in indicateurSessions"
+        v-for="ind in indicateursSelectionnes"
         :key="ind.id"
         cols="12"
-        sm="6"
-        md="4"
+        sm="8"
+        md="6"
+        class="mx-auto mb-4"
       >
-        <v-card elevation="2" class="pa-4 rounded-xl">
-          <div class="text-subtitle-1 font-weight-bold mb-1">{{ ind.nom }}</div>
-          <div class="text-caption text-grey mb-3">
-            {{ ind.categorie?.nom || ind.categorie }}
-          </div>
-
-          <v-list density="compact" class="progress-list">
-            <v-list-item
-              v-for="mesure in mesuresParIndicateur[ind.id]"
-              :key="mesure.id"
-              class="d-flex flex-column"
-            >
-              <div class="d-flex justify-space-between align-center mb-1">
-                <span class="text-caption">{{ mesure.dateMesure }}</span>
-                <span class="text-caption font-weight-medium">{{ mesure.valeur }}</span>
-              </div>
-              <v-progress-linear
-                :model-value="mesure.valeur"
-                height="6"
-                color="primary"
-                rounded
-              />
-            </v-list-item>
-          </v-list>
-
-          <div
-            v-if="!mesuresParIndicateur[ind.id] || mesuresParIndicateur[ind.id].length === 0"
-            class="text-caption text-grey mt-2"
-          >
-            Aucune mesure enregistrée.
-          </div>
+        <v-card elevation="2" class="pa-4 rounded-xl" color="grey-lighten-4">
+          <ApexCharts
+            width="100%"
+            height="300"
+            type="bar"
+            :options="getChartConfig(ind).options"
+            :series="getChartConfig(ind).series"
+          />
         </v-card>
       </v-col>
     </v-row>
@@ -48,49 +37,131 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue'
+import ApexCharts from 'vue3-apexcharts'
 
-const indicateurSessions = ref([]);
-const mesuresParIndicateur = ref({});
+const indicateurs = ref([])
+const mesuresParIndicateur = ref({})
+const selectedIndicateurIds = ref([])
 
-const fetchMesuresForIndicateur = async (id) => {
+// 🔹 Charger les mesures pour un indicateur
+const fetchMesuresForIndicateur = async (ind) => {
   try {
-    const response = await fetch(`http://localhost:8989/api/mesures/indicateur/${id}`);
-    const data = await response.json();
+    const endpoint = ind.type === 'global'
+      ? `http://localhost:8989/api/mesures/indicateur-global/${ind.rawId}`
+      : `http://localhost:8989/api/mesures/indicateur-session/${ind.rawId}`
 
-    const triées = data.sort((a, b) =>
-      new Date(a.dateMesure || a.date_mesure) - new Date(b.dateMesure || b.date_mesure)
-    );
+    const res = await fetch(endpoint)
 
-    mesuresParIndicateur.value[id] = triées;
+    if (!res.ok) {
+      console.error(`Erreur API ${res.status} pour ${ind.nom}`)
+      mesuresParIndicateur.value[ind.id] = []
+      return
+    }
+
+    const data = await res.json()
+    mesuresParIndicateur.value[ind.id] = data.sort((a, b) =>
+      new Date(a.dateMesure) - new Date(b.dateMesure)
+    )
   } catch (err) {
-    console.error('Erreur fetch mesures pour indicateur', id, err);
+    console.error(`Erreur fetch mesures ${ind.nom}:`, err)
+    mesuresParIndicateur.value[ind.id] = []
   }
-};
+}
 
-onMounted(() => {
-  fetch('http://localhost:8989/api/indicateurSessions')
-    .then((res) => res.json())
-    .then((data) => {
-      indicateurSessions.value = data.map((ind) => ({
-        ...ind,
-        id: ind.idIndicateurSession,
-      }));
+// 🔹 Chargement initial
+onMounted(async () => {
+  const [globals, sessions] = await Promise.all([
+    fetch("http://localhost:8989/api/indicateurGlobals").then(res => res.json()),
+    fetch("http://localhost:8989/api/indicateurSessions").then(res => res.json())
+  ])
 
-      indicateurSessions.value.forEach((ind) => {
-        fetchMesuresForIndicateur(ind.id);
-      });
-    })
-    .catch((err) => console.error('Erreur récupération indicateurs session:', err));
-});
+  const mappedGlobals = globals.map(ind => ({
+    id: `g-${ind.idIndicateurGlobal}`,
+    nom: ind.nom + ' (Global)',
+    type: 'global',
+    rawId: ind.idIndicateurGlobal
+  }))
+
+  const mappedSessions = sessions.map(ind => ({
+    id: `s-${ind.idIndicateurSession}`,
+    nom: ind.nom + ' (Session)',
+    type: 'session',
+    rawId: ind.idIndicateurSession
+  }))
+
+  indicateurs.value = [...mappedGlobals, ...mappedSessions].filter(ind => ind.nom && ind.nom.trim() !== '')
+})
+
+// 🔹 Rechargement des mesures au moment du clic
+watch(selectedIndicateurIds, async (newIds) => {
+  for (const id of newIds) {
+    if (!mesuresParIndicateur.value[id]) {
+      const ind = indicateurs.value.find(i => i.id === id)
+      if (ind) await fetchMesuresForIndicateur(ind)
+    }
+  }
+})
+
+// 🔹 Liste affichée
+const indicateursSelectionnes = computed(() =>
+  indicateurs.value.filter(i => selectedIndicateurIds.value.includes(i.id))
+)
+
+// 🔹 Graphique avec affichage des dates au bon format
+const getChartConfig = (ind) => {
+  const mesures = mesuresParIndicateur.value[ind.id] || []
+
+  return {
+    series: [{
+      name: ind.nom,
+      data: mesures.map(m => ({
+        // Si c’est un indicateur de session ➜ on affiche la session
+        x: ind.type === 'session'
+          ? `${new Date(m.dateMesure).toLocaleDateString("fr-FR")} - ${m.session?.nom || "Session inconnue"}`
+          : new Date(m.dateMesure).toLocaleDateString("fr-FR"),
+        y: m.valeur
+      }))
+    }],
+    options: {
+      chart: {
+        type: 'bar',
+        toolbar: { show: false }
+      },
+      title: {
+        text: `${ind.nom}`,
+        align: 'center',
+        style: { fontSize: '16px' }
+      },
+      xaxis: {
+        title: { text: 'Date' },
+        type: 'category',
+        labels: {
+          rotate: -45,
+          style: {
+            fontSize: '12px',
+            colors: '#333'
+          }
+        }
+      },
+      yaxis: {
+        title: { text: 'Valeur mesurée' }
+      },
+      dataLabels: {
+        enabled: true,
+        style: {
+          fontSize: '12px',
+          colors: ['#000']
+        }
+      }
+    }
+  }
+}
+
 </script>
 
 <style scoped>
 .progressions-container {
   padding-top: 32px;
-}
-
-.progress-list {
-  background-color: transparent;
 }
 </style>

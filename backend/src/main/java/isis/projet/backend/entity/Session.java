@@ -23,9 +23,7 @@ public class Session {
     private Utilisateur utilisateur;
 
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<IndicateurSession> indicateursSession;
+
 
 
 }

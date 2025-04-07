@@ -20,17 +20,12 @@ public class IndicateurSession {
     private LocalDate date;
 
     @ManyToOne
-    @JoinColumn(name = "id_personne")
-    private Utilisateur utilisateur;
-
-    @ManyToOne
-    @JoinColumn(name = "id_session")
-    private Session session;
-
-
-    @ManyToOne
     @JoinColumn(name = "id_categorie")
     private Categorie categorie;
+
+    @ManyToOne
+    @JoinColumn(name = "id_personne")
+    private Utilisateur utilisateur;
 
     @OneToMany(mappedBy = "indicateurSession", cascade = CascadeType.ALL)
     @JsonManagedReference // 👈 Ici on garde la relation

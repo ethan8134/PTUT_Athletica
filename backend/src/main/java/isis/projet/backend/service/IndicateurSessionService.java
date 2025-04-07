@@ -1,9 +1,7 @@
 package isis.projet.backend.service;
 
 import isis.projet.backend.dao.IndicateurSessionRepository;
-import isis.projet.backend.dao.SessionRepository;
 import isis.projet.backend.entity.IndicateurSession;
-import isis.projet.backend.entity.Session;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +13,9 @@ import java.util.Optional;
 public class IndicateurSessionService {
 
     private final IndicateurSessionRepository indicateurSessionRepository;
-    private final SessionRepository sessionRepository;
 
-    public IndicateurSessionService(IndicateurSessionRepository indicateurSessionRepository,
-                                    SessionRepository sessionRepository) {
+    public IndicateurSessionService(IndicateurSessionRepository indicateurSessionRepository) {
         this.indicateurSessionRepository = indicateurSessionRepository;
-        this.sessionRepository = sessionRepository;
     }
 
     public List<IndicateurSession> getAllIndicateurs() {
@@ -32,13 +27,6 @@ public class IndicateurSessionService {
     }
 
     public IndicateurSession createIndicateur(IndicateurSession indicateur) {
-        if (indicateur.getSession() != null && indicateur.getSession().getIdSession() != null) {
-            Integer sessionId = indicateur.getSession().getIdSession();
-            Session session = sessionRepository.findById(sessionId).orElse(null);
-            if (session != null) {
-                indicateur.setSession(session); // 🔗 association effective
-            }
-        }
         return indicateurSessionRepository.save(indicateur);
     }
 
@@ -48,6 +36,8 @@ public class IndicateurSessionService {
                     existing.setNom(indicateur.getNom());
                     existing.setUnite(indicateur.getUnite());
                     existing.setDate(indicateur.getDate());
+                    existing.setCategorie(indicateur.getCategorie());
+                    existing.setUtilisateur(indicateur.getUtilisateur());
                     return indicateurSessionRepository.save(existing);
                 }).orElse(null);
     }

@@ -18,42 +18,39 @@ public class Mesure {
 
     @ManyToOne
     @JoinColumn(name = "id_indicateur_session")
-    @JsonBackReference // 👈 Ici on indique : "ne pas re-serialiser ce champ"
+    @JsonBackReference
     private IndicateurSession indicateurSession;
 
+    @ManyToOne
+    @JoinColumn(name = "id_indicateur_global")
+    private IndicateurGlobal indicateurGlobal; // ✅ à ajouter
 
-    // ✅ GETTERS ET SETTERS OBLIGATOIRES
+    @ManyToOne
+    @JoinColumn(name = "id_session")
+    private Session session;
 
-    public Long getId() {
-        return id;
-    }
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Double getValeur() { return valeur; }
+    public void setValeur(Double valeur) { this.valeur = valeur; }
 
-    public Double getValeur() {
-        return valeur;
-    }
+    public LocalDate getDateMesure() { return dateMesure; }
+    public void setDateMesure(LocalDate dateMesure) { this.dateMesure = dateMesure; }
 
-    public void setValeur(Double valeur) {
-        this.valeur = valeur;
-    }
-
-    public LocalDate getDateMesure() {
-        return dateMesure;
-    }
-
-    public void setDateMesure(LocalDate dateMesure) {
-        this.dateMesure = dateMesure;
-    }
-
-    public IndicateurSession getIndicateurSession() {
-        return indicateurSession;
-    }
-
+    public IndicateurSession getIndicateurSession() { return indicateurSession; }
     public void setIndicateurSession(IndicateurSession indicateurSession) {
         this.indicateurSession = indicateurSession;
     }
-}
 
+    public IndicateurGlobal getIndicateurGlobal() {
+        return indicateurGlobal;
+    }
+    public void setIndicateurGlobal(IndicateurGlobal indicateurGlobal) {
+        this.indicateurGlobal = indicateurGlobal;
+    }
+
+    public Session getSession() { return session; }
+    public void setSession(Session session) { this.session = session; }
+}
