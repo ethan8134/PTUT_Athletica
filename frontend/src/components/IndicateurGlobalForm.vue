@@ -12,13 +12,6 @@
         <input v-model="indicateur.unite" placeholder="Ex: kg" required />
       </div>
 
-
-
-      <div class="form-group">
-        <label>Date</label>
-        <input type="date" v-model="indicateur.date" required />
-      </div>
-
       <div class="form-buttons">
         <button class="btn-primary" type="submit">✅ Valider</button>
         <button class="btn-cancel" type="button" @click="cancelForm">Annuler</button>
@@ -40,7 +33,7 @@ const indicateur = ref({
 })
 
 const submitForm = async () => {
-  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.date) {
+  if (!indicateur.value.nom || !indicateur.value.unite) {
     alert('Veuillez remplir tous les champs.')
     return
   }
@@ -48,7 +41,6 @@ const submitForm = async () => {
   const body = {
     nom: indicateur.value.nom,
     unite: indicateur.value.unite,
-    date: indicateur.value.date,
     utilisateur: { idPersonne: 1 }, // ✅ ok si l'utilisateur est fixe
   }
 

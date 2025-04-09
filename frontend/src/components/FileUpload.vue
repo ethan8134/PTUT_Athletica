@@ -83,25 +83,32 @@ const handleDrop = (event) => {
 /**
  * Logique d'import (upload)
  */
-const handleFileUpload = () => {
+const handleFileUpload = async () => {
   if (!selectedFile.value) {
     alert("Aucun fichier sélectionné.");
     return;
   }
-  // Exemple minimal : on log simplement le nom du fichier
-  // Vous pouvez appeler votre API pour l'import
-  console.log("Import du fichier :", selectedFile.value.name);
-  alert(`Fichier "${selectedFile.value.name}" importé avec succès !`);
-  // Réinitialiser
-  selectedFile.value = null;
-  fileInput.value.value = "";
-};
 
-/**
- * Redirection vers le formulaire Session
- */
-const redirectToSessionForm = () => {
-  showSessionForm.value = true;
+  const formData = new FormData();
+  formData.append("file", selectedFile.value);
+
+  try {
+    const response = await fetch("http://localhost:8989/api/import", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) throw new Error("Erreur lors de l'import");
+
+    alert(`✅ Fichier "${selectedFile.value.name}" importé avec succès !`);
+
+    // Reset
+    selectedFile.value = null;
+    fileInput.value.value = "";
+  } catch (err) {
+    console.error("Erreur import :", err);
+    alert("❌ Une erreur est survenue pendant l'import.");
+  }
 };
 
 </script>
