@@ -19,13 +19,13 @@
         <v-list-item to="/MesSessions">
           <v-list-item-title>Mes sessions</v-list-item-title>
         </v-list-item>
+        <v-list-item to="/MesProgressions">
+          <v-list-item-title>Mes Progressions</v-list-item-title>
+        </v-list-item>
+        <v-list-item to="/PageMonCompte">
+          <v-list-item-title>Mon Compte</v-list-item-title>
+        </v-list-item>
       </v-list>
-      <v-list-item to="/MesProgressions">
-        <v-list-item-title>Mes Progressions</v-list-item-title>
-      </v-list-item>
-      <v-list-item to="/PageMonCompte">
-        <v-list-item-title>Mon Compte</v-list-item-title>
-      </v-list-item>
     </v-navigation-drawer>
     <v-main>
       <v-container class="page">
