@@ -16,9 +16,7 @@
   </v-container>
 </template>
 
-<script setup>
-// Aucun script spécifique nécessaire pour cette page
-</script>
+<script setup></script>
 
 <style scoped>
 .help-page {
@@ -27,7 +25,7 @@
   justify-content: space-between;
   align-items: center;
   min-height: 100vh;
-  background-color: #0e0c70; /* Couleur de fond bleu */
+  background-color: #0e0c70;
   color: white;
   text-align: center;
   padding: 20px;
@@ -61,7 +59,7 @@ p {
 }
 
 .contact-btn:hover {
-  background-color: #ff8c00; /* Couleur légèrement plus foncée au survol */
+  background-color: #ff8c00;
 }
 
 .footer {

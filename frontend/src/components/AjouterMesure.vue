@@ -8,7 +8,6 @@
       </v-btn>
     </v-card-title>
 
-    <!-- Dialogue pour ajouter une nouvelle mesure -->
     <v-dialog v-model="dialog" max-width="400">
       <v-card>
         <v-card-title>Ajouter une nouvelle mesure</v-card-title>
@@ -26,20 +25,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 
-// Tu peux recevoir l'indicateur en prop depuis le parent
 const props = defineProps({
   indicateur: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 });
 
 const dialog = ref(false);
-const newMesure = ref('');
+const newMesure = ref("");
 
-// Fonction pour envoyer la nouvelle mesure à l'API
 const submitMesure = () => {
   if (!newMesure.value || isNaN(newMesure.value)) {
     alert("Veuillez saisir une valeur numérique valide.");
@@ -48,35 +45,33 @@ const submitMesure = () => {
 
   const body = {
     valeur: parseFloat(newMesure.value),
-    dateMesure: new Date().toISOString().split('T')[0],
-    indicateurSession: { idIndicateurSession: props.indicateur.idIndicateurSession }
-    // Tu peux ajouter d'autres champs si nécessaire
+    dateMesure: new Date().toISOString().split("T")[0],
+    indicateurSession: {
+      idIndicateurSession: props.indicateur.idIndicateurSession,
+    },
   };
 
-  fetch('http://localhost:8989/api/mesures', {
-    method: 'POST',
+  fetch("http://localhost:8989/api/mesures", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   })
-    .then(res => {
+    .then((res) => {
       if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
       return res.json();
     })
-    .then(data => {
+    .then((data) => {
       console.log("Mesure ajoutée :", data);
       dialog.value = false;
-      newMesure.value = '';
-      // Optionnel : déclencher une mise à jour du parent pour rafraîchir les mesures affichées
+      newMesure.value = "";
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       alert("Une erreur est survenue lors de l'ajout de la mesure.");
     });
 };
 </script>
 
-<style scoped>
-/* Tu peux ajuster le style selon ton design */
-</style>
+<style scoped></style>

@@ -12,7 +12,9 @@
       </div>
       <div class="form-buttons">
         <button class="btn-primary" type="submit">Valider</button>
-        <button class="btn-cancel" type="button" @click="cancelForm">Annuler</button>
+        <button class="btn-cancel" type="button" @click="cancelForm">
+          Annuler
+        </button>
       </div>
     </form>
   </div>
@@ -20,7 +22,7 @@
 
 <script setup>
 import { ref } from "vue";
-import { useRouter } from 'vue-router';
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 
@@ -53,7 +55,7 @@ const submitForm = () => {
       console.log("Session créée :", createdSession);
       router.push({
         path: "/AjouterIndicateur",
-        query: { sessionId: createdSession.idSession }
+        query: { sessionId: createdSession.idSession },
       });
     })
     .catch((error) => {
@@ -97,5 +99,20 @@ const cancelForm = () => {
   padding: 10px 20px;
   border: none;
   border-radius: 4px;
+}
+
+input {
+  border: 1px solid black;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 </style>

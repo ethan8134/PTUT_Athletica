@@ -1,6 +1,5 @@
 <template>
   <v-container class="account-page">
-    <!-- Section Profil -->
     <div class="profile-header">
       <v-avatar size="80">
         <img src="https://via.placeholder.com/80" alt="Avatar utilisateur" />
@@ -14,14 +13,12 @@
       </v-btn>
     </div>
 
-    <!-- Affichage statique -->
     <div v-if="!isEditing" class="static-info">
       <p><strong>Nom complet :</strong> {{ form.pseudo }}</p>
       <p><strong>Email :</strong> {{ form.email }}</p>
       <p><strong>Préférences :</strong> {{ form.preferences }}</p>
     </div>
 
-    <!-- Formulaire de modification -->
     <v-form v-else ref="form" class="edit-form">
       <v-row>
         <v-col cols="12" md="6">
@@ -83,7 +80,7 @@ export default {
   props: {
     userData: {
       type: Object,
-      required: false, // Rendre la prop facultative
+      required: false,
     },
   },
   setup(props) {
@@ -98,7 +95,7 @@ export default {
             props.userData.mdp,
             props.userData.preferences
           )
-        : new Utilisateur(1, "Ali", "ali@example.com", "motdepasse", "Trail") // Utilisateur de test
+        : new Utilisateur(1, "Ali", "ali@example.com", "motdepasse", "Trail")
     );
 
     const form = ref({
@@ -110,9 +107,8 @@ export default {
       preferences: utilisateur.value?.preferences || "",
     });
 
-    const editForm = ref({ ...form.value }); // Copie temporaire pour l'édition
+    const editForm = ref({ ...form.value });
 
-    // Surveille les changements de userData
     watch(
       () => props.userData,
       (newValue) => {
@@ -144,7 +140,6 @@ export default {
 
       if (!form.value) {
         console.error("Formulaire non initialisé !");
-        // Réinitialiser `form` avec des valeurs par défaut si nécessaire
         form.value = {
           idPersonne: utilisateur.value?.idPersonne || null,
           pseudo: utilisateur.value?.pseudo || "",
@@ -168,7 +163,7 @@ export default {
 
     function cancelEdit() {
       isEditing.value = false;
-      editForm.value = { ...form.value }; // Réinitialiser les modifications
+      editForm.value = { ...form.value };
       console.log("Formulaire annulé, données actuelles :", form.value);
     }
 
@@ -203,7 +198,6 @@ export default {
         const data = await response.json();
         console.log("Modifications sauvegardées :", data);
 
-        // Mettre à jour les données affichées
         form.value = { ...editForm.value };
         utilisateur.value = new Utilisateur(
           form.value.idPersonne,
@@ -237,7 +231,6 @@ export default {
 </script>
 
 <style scoped>
-/* Structure générale */
 .account-page {
   max-width: 800px;
   margin: 0 auto;
@@ -247,7 +240,6 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* En-tête du profil */
 .profile-header {
   display: flex;
   align-items: center;
@@ -279,7 +271,6 @@ export default {
   margin-left: auto;
 }
 
-/* Formulaire de modification */
 .edit-form {
   margin-top: 20px;
   padding: 20px;

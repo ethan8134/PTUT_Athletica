@@ -2,7 +2,6 @@
   <v-container
     class="fill-height d-flex flex-column justify-center align-center accueil-container"
   >
-    <!-- Titre principal -->
     <v-row justify="center" class="mb-5">
       <v-col cols="12" md="8" class="text-center">
         <h1 class="text-h3 font-weight-bold">
@@ -15,7 +14,6 @@
       </v-col>
     </v-row>
 
-    <!-- Section des fonctionnalités -->
     <v-row justify="center" class="mb-5">
       <v-col cols="12" md="10">
         <v-card class="pa-4 accueil-card">
@@ -62,7 +60,6 @@
       </v-col>
     </v-row>
 
-    <!-- Section des boutons de redirection -->
     <v-row justify="center">
       <v-col cols="12" md="8" class="text-center">
         <p class="text-body-1 mb-4">
@@ -100,9 +97,7 @@
   </v-container>
 </template>
 
-<script setup>
-// Aucun script nécessaire pour ce composant statique
-</script>
+<script setup></script>
 
 <style scoped>
 .accent-text {

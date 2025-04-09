@@ -4,7 +4,11 @@
     <form @submit.prevent="submitForm">
       <div class="form-group">
         <label>Nom de l'indicateur</label>
-        <input v-model="indicateur.nom" placeholder="Ex: Rythme Cardiaque" required />
+        <input
+          v-model="indicateur.nom"
+          placeholder="Ex: Rythme Cardiaque"
+          required
+        />
       </div>
 
       <div class="form-group">
@@ -14,10 +18,13 @@
 
       <div class="form-group">
         <label>Catégorie</label>
-        <input v-model="indicateur.categorie" placeholder="Ex: Indicateur de santé" required />
+        <input
+          v-model="indicateur.categorie"
+          placeholder="Ex: Indicateur de santé"
+          required
+        />
       </div>
 
-      <!-- Valeur initiale -->
       <div class="form-group">
         <label>Valeur initiale</label>
         <input v-model="mesure.valeur" type="number" placeholder="Ex: 12.5" />
@@ -30,11 +37,13 @@
 
       <div class="form-buttons">
         <button class="add-btn" type="submit">✅ Valider</button>
-        <button class="cancel-btn" type="button" @click="cancelForm"> Annuler</button>
+        <button class="cancel-btn" type="button" @click="cancelForm">
+          Annuler
+        </button>
       </div>
     </form>
     <div v-if="sessionId">
-      <hr style="margin-top: 30px; margin-bottom: 20px;" />
+      <hr style="margin-top: 30px; margin-bottom: 20px" />
 
       <h3>📌 Ajouter une mesure à un indicateur existant</h3>
 
@@ -59,9 +68,10 @@
         type="date"
       />
 
-      <v-btn color="green" @click="ajouterValeurExistante">✅ Ajouter la valeur</v-btn>
+      <v-btn color="green" @click="ajouterValeurExistante"
+        >✅ Ajouter la valeur</v-btn
+      >
     </div>
-
   </div>
 </template>
 
@@ -80,15 +90,18 @@ const indicateursExistants = ref([]);
 
 onMounted(() => {
   fetch("http://localhost:8989/api/indicateurSessions")
-    .then(res => res.json())
-    .then(data => {
-      indicateursExistants.value = data; // ✅ on ne filtre plus par session
+    .then((res) => res.json())
+    .then((data) => {
+      indicateursExistants.value = data;
     });
 });
 
-
 const ajouterValeurExistante = () => {
-  if (!selectedIndicateurId.value || !mesureExistante.value.valeur || !mesureExistante.value.dateMesure) {
+  if (
+    !selectedIndicateurId.value ||
+    !mesureExistante.value.valeur ||
+    !mesureExistante.value.dateMesure
+  ) {
     alert("Veuillez remplir tous les champs.");
     return;
   }
@@ -97,25 +110,24 @@ const ajouterValeurExistante = () => {
     valeur: parseFloat(mesureExistante.value.valeur),
     dateMesure: mesureExistante.value.dateMesure,
     indicateurSession: { idIndicateurSession: selectedIndicateurId.value },
-    session: { idSession: parseInt(sessionId) }
+    session: { idSession: parseInt(sessionId) },
   };
 
   fetch("http://localhost:8989/api/mesures", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   })
-    .then(res => {
+    .then((res) => {
       if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
       alert("✅ Valeur ajoutée à l’indicateur !");
       mesureExistante.value = { valeur: "", dateMesure: "" };
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       alert("❌ Une erreur est survenue : " + err.message);
     });
 };
-// 💡 utilisé uniquement pour la mesure
 
 const indicateur = ref({
   nom: "",
@@ -129,22 +141,24 @@ const mesure = ref({
 });
 
 const submitForm = async () => {
-  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.categorie) {
+  if (
+    !indicateur.value.nom ||
+    !indicateur.value.unite ||
+    !indicateur.value.categorie
+  ) {
     alert("Remplis bien tous les champs !");
     return;
   }
 
   try {
-    // First create the indicator
     const bodyIndicateur = {
       nom: indicateur.value.nom,
       unite: indicateur.value.unite,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split("T")[0],
       categorie: { idCategorie: 1 },
       utilisateur: { idPersonne: 1 },
-      session: sessionId ? { idSession: parseInt(sessionId) } : null
+      session: sessionId ? { idSession: parseInt(sessionId) } : null,
     };
-
 
     console.log("Sending indicator data:", bodyIndicateur);
 
@@ -157,7 +171,9 @@ const submitForm = async () => {
     if (!res.ok) {
       const errorText = await res.text();
       console.error("Server response:", errorText);
-      throw new Error(`Error creating indicator: ${res.status} ${res.statusText}`);
+      throw new Error(
+        `Error creating indicator: ${res.status} ${res.statusText}`
+      );
     }
 
     const created = await res.json();
@@ -165,20 +181,18 @@ const submitForm = async () => {
 
     if (sessionId) {
       fetch("http://localhost:8989/api/indicateurSessions")
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           indicateursExistants.value = data;
         });
     }
 
-
-    // Create measurement if needed
     if (sessionId && mesure.value.valeur && mesure.value.dateMesure) {
       const bodyMesure = {
         valeur: parseFloat(mesure.value.valeur),
         dateMesure: mesure.value.dateMesure,
         indicateurSession: { idIndicateurSession: created.idIndicateurSession },
-        session: { idSession: parseInt(sessionId) }
+        session: { idSession: parseInt(sessionId) },
       };
 
       console.log("Sending measurement data:", bodyMesure);
@@ -192,7 +206,9 @@ const submitForm = async () => {
       if (!resMesure.ok) {
         const errorText = await resMesure.text();
         console.error("Server response for measurement:", errorText);
-        throw new Error(`Error creating measurement: ${resMesure.status} ${resMesure.statusText}`);
+        throw new Error(
+          `Error creating measurement: ${resMesure.status} ${resMesure.statusText}`
+        );
       }
     }
 
@@ -202,7 +218,6 @@ const submitForm = async () => {
     console.error("Erreur complète:", err);
     alert(`Une erreur s'est produite: ${err.message}`);
   }
-
 };
 
 const cancelForm = () => {
@@ -211,7 +226,6 @@ const cancelForm = () => {
 </script>
 
 <style scoped>
-/* même style que tu avais déjà */
 .indicateur-form-container {
   max-width: 600px;
   margin: 20px auto;
@@ -240,5 +254,20 @@ const cancelForm = () => {
   color: white;
   padding: 10px;
   border: none;
+}
+
+input {
+  border: 1px solid black;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 </style>

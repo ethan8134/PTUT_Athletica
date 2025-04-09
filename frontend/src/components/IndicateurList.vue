@@ -66,7 +66,6 @@
       </button>
     </div>
 
-    <!-- Popup d'ajout de mesure -->
     <v-dialog v-model="showPopup" max-width="500px">
       <v-card>
         <v-card-title class="headline">Ajouter une mesure</v-card-title>
@@ -117,7 +116,6 @@ const selectType = (type) => {
   currentPage.value = 1;
   showDropdown.value = false;
 
-  // Mise à jour du texte affiché
   if (type === "") {
     labelType.value = "Toutes catégories";
   } else if (type === "global") {
@@ -232,12 +230,10 @@ function validerMesure() {
     return;
   }
 
-  // Format date in ISO format to ensure compatibility
   const formattedDate = new Date(newMesure.value.dateMesure)
     .toISOString()
     .split("T")[0];
 
-  // Create the request body with the proper structure
   let body;
   if (selectedIndicateur.value.type === "global") {
     body = {
@@ -257,7 +253,6 @@ function validerMesure() {
     };
   }
 
-  // Add console.log to see what's being sent
   console.log("Sending data:", JSON.stringify(body));
 
   fetch("http://localhost:8989/api/mesures", {
@@ -267,7 +262,6 @@ function validerMesure() {
   })
     .then((res) => {
       if (!res.ok) {
-        // Get more info about the error
         return res.text().then((text) => {
           throw new Error(`Erreur API: ${text}`);
         });
@@ -433,7 +427,6 @@ tr:nth-child(even) {
   cursor: not-allowed;
 }
 
-/* 🔽 Style du popup */
 .modal-overlay {
   position: fixed;
   top: 0;
