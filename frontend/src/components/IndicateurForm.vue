@@ -221,7 +221,7 @@ const submitForm = async () => {
 };
 
 const cancelForm = () => {
-  router.push("/");
+  router.push("/MesIndicateurs");
 };
 </script>
 

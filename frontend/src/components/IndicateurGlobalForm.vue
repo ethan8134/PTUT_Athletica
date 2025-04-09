@@ -53,7 +53,7 @@ const submitForm = async () => {
     nom: indicateur.value.nom,
     unite: indicateur.value.unite,
     date: indicateur.value.date,
-    utilisateur: { idPersonne: 1 }, // ✅ ok si l'utilisateur est fixe
+    utilisateur: { idPersonne: 1 },
   };
 
   try {
@@ -73,7 +73,7 @@ const submitForm = async () => {
 };
 
 const cancelForm = () => {
-  router.push("/");
+  router.push("/MesIndicateurs");
 };
 </script>
 
