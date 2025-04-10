@@ -1,38 +1,42 @@
 <template>
-  <div class="upload-container">
-    <h2>Upload files</h2>
-    <p>Select and upload the file of your choice</p>
+  <div class="file-upload-page">
+    <button class="cancel-btn" type="button" @click="returnMesSessions">
+      Retour
+    </button>
+    <div class="upload-container">
+      <h2>Upload files</h2>
+      <p>Select and upload the file of your choice</p>
 
-    <div
-      class="drop-zone"
-      @dragover.prevent
-      @dragenter.prevent
-      @drop.prevent="handleDrop"
-    >
-      <p>Choose a file or drag &amp; drop it here</p>
-      <p class="formats">CSV, JSON formats, up to 50MB</p>
-      <input
-        class="file-input"
-        type="file"
-        ref="fileInput"
-        @change="handleFileSelect"
-        accept=".csv,.json"
-      />
+      <div
+        class="drop-zone"
+        @dragover.prevent
+        @dragenter.prevent
+        @drop.prevent="handleDrop"
+      >
+        <p>Choose a file or drag &amp; drop it here</p>
+        <p class="formats">CSV, JSON formats, up to 50MB</p>
+        <input
+          class="file-input"
+          type="file"
+          ref="fileInput"
+          @change="handleFileSelect"
+          accept=".csv,.json"
+        />
+      </div>
+
+      <button class="btn-secondary" @click="triggerFileSelect">
+        Sélectionner un fichier
+      </button>
+
+      <button class="btn-primary" @click="handleFileUpload">Importer</button>
+
+      <div class="divider"></div>
+      <button class="btn-new-session" @click="$emit('start-session')">
+        Commencer un enregistrement vierge
+      </button>
     </div>
-
-    <button class="btn-secondary" @click="triggerFileSelect">
-      Sélectionner un fichier
-    </button>
-
-    <button class="btn-primary" @click="handleFileUpload">Importer</button>
-
-    <div class="divider"></div>
-    <button class="btn-new-session" @click="$emit('start-session')">
-      Commencer un enregistrement vierge
-    </button>
   </div>
 </template>
-
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
@@ -87,12 +91,40 @@ const handleFileUpload = async () => {
     alert("Une erreur est survenue pendant l'import.");
   }
 };
+
+const returnMesSessions = () => {
+  router.push("/MesSessions");
+};
 </script>
 
 <style scoped>
+.file-upload-page {
+  display: flex;
+  align-items: flex-start; /* Aligne les éléments en haut */
+  gap: 20px; /* Espace entre le bouton et le conteneur */
+  padding: 20px;
+}
+
+.cancel-btn {
+  background-color: #0e0c70;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  height: fit-content; /* Ajuste la hauteur pour s'aligner avec le conteneur */
+}
+
+.cancel-btn:hover {
+  background-color: #0c085a;
+}
+
 .upload-container {
+  flex: 1; /* Prend tout l'espace restant */
   max-width: 500px;
-  margin: 40px auto;
+  margin: 0 auto; /* Centre horizontalement */
   padding: 20px 25px;
   background: #fff;
   border-radius: 8px;

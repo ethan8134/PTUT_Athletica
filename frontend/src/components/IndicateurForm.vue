@@ -125,11 +125,6 @@ const indicateur = ref({
   categorie: "",
 });
 
-const mesure = ref({
-  valeur: "",
-  dateMesure: "",
-});
-
 const submitForm = async () => {
   if (
     !indicateur.value.nom ||
