@@ -11,9 +11,6 @@
     <router-link to="/Indicateurs" class="redirect-btn">
       Consulter mes Indicateurs
     </router-link>
-    <v-btn color="grey-darken-1" @click="goBack" class="mt-4">
-      🔙 Retour
-    </v-btn>
 
   </v-container>
 </template>
@@ -25,9 +22,6 @@ import { useRoute, useRouter } from "vue-router";
 const route = useRoute();
 const router = useRouter();
 const sessionId = route.query.sessionId;
-const goBack = () => {
-  router.back()
-}
 
 
 const indicateur = ref({
