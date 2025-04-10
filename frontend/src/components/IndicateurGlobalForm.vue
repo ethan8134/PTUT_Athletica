@@ -13,7 +13,7 @@
       </div>
 
       <div class="form-buttons">
-        <button class="btn-primary" type="submit">✅ Valider</button>
+        <button class="btn-primary" type="submit">Valider</button>
         <button class="btn-cancel" type="button" @click="cancelForm">
           Annuler
         </button>
@@ -36,15 +36,15 @@ const indicateur = ref({
 
 const submitForm = async () => {
   if (!indicateur.value.nom || !indicateur.value.unite) {
-    alert('Veuillez remplir tous les champs.')
-    return
+    alert("Veuillez remplir tous les champs.");
+    return;
   }
 
   const body = {
     nom: indicateur.value.nom,
     unite: indicateur.value.unite,
-    utilisateur: { idPersonne: 1 }, // ✅ ok si l'utilisateur est fixe
-  }
+    utilisateur: { idPersonne: 1 },
+  };
 
   try {
     const res = await fetch("http://localhost:8989/api/indicateurGlobals", {
@@ -54,11 +54,11 @@ const submitForm = async () => {
     });
 
     if (!res.ok) throw new Error("Erreur lors de la création");
-    alert("✅ Indicateur global créé !");
+    alert("Indicateur global créé !");
     router.push("/");
   } catch (err) {
     console.error(err);
-    alert("❌ Une erreur s’est produite.");
+    alert("Une erreur s’est produite.");
   }
 };
 

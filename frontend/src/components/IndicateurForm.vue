@@ -3,7 +3,6 @@
     <h2>✍️ Ajouter un indicateur</h2>
     <form @submit.prevent="submitForm">
       <div class="form-group">
-
         <label>Nom de l'indicateur</label>
         <input
           v-model="indicateur.nom"
@@ -36,7 +35,7 @@
     <div v-if="sessionId">
       <hr style="margin-top: 30px; margin-bottom: 20px" />
 
-      <h3>📌 Ajouter une mesure à un indicateur existant</h3>
+      <h3>Ajouter une mesure à un indicateur existant</h3>
 
       <v-select
         label="Indicateur existant"
@@ -60,7 +59,7 @@
       />
 
       <v-btn color="green" @click="ajouterValeurExistante"
-        >✅ Ajouter la valeur</v-btn
+        >Ajouter la valeur</v-btn
       >
     </div>
   </div>
@@ -111,12 +110,12 @@ const ajouterValeurExistante = () => {
   })
     .then((res) => {
       if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
-      alert("✅ Valeur ajoutée à l’indicateur !");
+      alert("Valeur ajoutée à l’indicateur !");
       mesureExistante.value = { valeur: "", dateMesure: "" };
     })
     .catch((err) => {
       console.error(err);
-      alert("❌ Une erreur est survenue : " + err.message);
+      alert("Une erreur est survenue : " + err.message);
     });
 };
 
@@ -178,7 +177,7 @@ const submitForm = async () => {
         });
     }
 
-    alert("✅ Indicateur (et mesure si possible) créé !");
+    alert("Indicateur (et mesure si possible) créé !");
     router.push("/");
   } catch (err) {
     console.error("Erreur complète:", err);

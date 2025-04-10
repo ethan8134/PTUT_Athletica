@@ -151,13 +151,13 @@ const saveEdit = () => {
   })
     .then((res) => {
       if (!res.ok) throw new Error("Erreur lors de la mise à jour");
-      alert("✅ Session mise à jour !");
+      alert("Session mise à jour !");
       cancelEdit();
       fetchSessions();
     })
     .catch((err) => {
       console.error(err);
-      alert("❌ Erreur lors de la mise à jour.");
+      alert("Erreur lors de la mise à jour.");
     });
 };
 
@@ -195,12 +195,12 @@ const submitMesure = () => {
   })
     .then((res) => {
       if (!res.ok) throw new Error("Erreur API");
-      alert("✅ Mesure enregistrée !");
+      alert("Mesure enregistrée !");
       showAddMesure.value = false;
     })
     .catch((err) => {
       console.error(err);
-      alert("❌ Une erreur est survenue.");
+      alert("Une erreur est survenue.");
     });
 };
 </script>

@@ -32,7 +32,11 @@
             :series="getChartConfig(ind).series"
           />
 
-          <v-sheet class="mt-4 pa-3 rounded-lg" color="grey-lighten-3" v-if="(mesuresParIndicateur[ind.id] || []).length">
+          <v-sheet
+            class="mt-4 pa-3 rounded-lg"
+            color="grey-lighten-3"
+            v-if="(mesuresParIndicateur[ind.id] || []).length"
+          >
             <h4 class="text-subtitle-1 mb-3">📍 Mesures :</h4>
             <v-list density="comfortable" class="bg-transparent">
               <v-list-item
@@ -41,10 +45,11 @@
                 class="px-2 d-flex justify-space-between align-center rounded-lg mb-2 hoverable"
               >
                 <div class="d-flex align-center gap-3">
-    <span class="font-weight-medium">
-      📅 {{ new Date(m.dateMesure).toLocaleDateString("fr-FR") }} -
-      🔢 Valeur : <strong>{{ m.valeur }}</strong>
-    </span>
+                  <span class="font-weight-medium">
+                    📅
+                    {{ new Date(m.dateMesure).toLocaleDateString("fr-FR") }} -
+                    🔢 Valeur : <strong>{{ m.valeur }}</strong>
+                  </span>
                 </div>
                 <v-btn
                   icon
@@ -97,26 +102,29 @@ const fetchMesuresForIndicateur = async (ind) => {
 };
 
 const supprimerMesure = async (ind, idMesure) => {
-  const confirmDelete = confirm("Souhaites-tu vraiment supprimer cette mesure ? Cette action est irréversible.")
+  const confirmDelete = confirm(
+    "Souhaites-tu vraiment supprimer cette mesure ? Cette action est irréversible."
+  );
   if (!confirmDelete) return;
 
-  const endpoint = `http://localhost:8989/api/mesures/${idMesure}`
+  const endpoint = `http://localhost:8989/api/mesures/${idMesure}`;
 
   try {
-    const res = await fetch(endpoint, { method: 'DELETE' })
+    const res = await fetch(endpoint, { method: "DELETE" });
 
     if (res.ok) {
-      alert("Mesure supprimée avec succès ✅")
-      mesuresParIndicateur.value[ind.id] = mesuresParIndicateur.value[ind.id].filter(m => m.id !== idMesure)
+      alert("Mesure supprimée avec succès");
+      mesuresParIndicateur.value[ind.id] = mesuresParIndicateur.value[
+        ind.id
+      ].filter((m) => m.id !== idMesure);
     } else {
-      alert(`Erreur de suppression (code ${res.status})`)
+      alert(`Erreur de suppression (code ${res.status})`);
     }
   } catch (err) {
-    console.error("Erreur suppression :", err)
-    alert("Erreur lors de la suppression")
+    console.error("Erreur suppression :", err);
+    alert("Erreur lors de la suppression");
   }
-}
-
+};
 
 onMounted(async () => {
   const [globals, sessions] = await Promise.all([
@@ -164,32 +172,37 @@ const getChartConfig = (ind) => {
   const mesures = mesuresParIndicateur.value[ind.id] || [];
 
   return {
-    series: [{
-      name: ind.nom,
-      data: mesures.map(m => ({
-        x: ind.type === 'session'
-          ? `${new Date(m.dateMesure).toLocaleDateString("fr-FR")} - ${m.session?.nom || "Session inconnue"}`
-          : new Date(m.dateMesure).toLocaleDateString("fr-FR"),
-        y: m.valeur
-      }))
-    }],
+    series: [
+      {
+        name: ind.nom,
+        data: mesures.map((m) => ({
+          x:
+            ind.type === "session"
+              ? `${new Date(m.dateMesure).toLocaleDateString("fr-FR")} - ${
+                  m.session?.nom || "Session inconnue"
+                }`
+              : new Date(m.dateMesure).toLocaleDateString("fr-FR"),
+          y: m.valeur,
+        })),
+      },
+    ],
     options: {
       chart: {
-        type: 'line',
-        toolbar: { show: false }
+        type: "line",
+        toolbar: { show: false },
       },
       stroke: {
-        curve: 'smooth',
-        width: 2
+        curve: "smooth",
+        width: 2,
       },
       markers: {
         size: 6,
-        colors: ['#007bff'],
-        strokeColors: '#fff',
+        colors: ["#007bff"],
+        strokeColors: "#fff",
         strokeWidth: 2,
         hover: {
-          size: 8
-        }
+          size: 8,
+        },
       },
       title: {
         text: `${ind.nom}`,
@@ -213,13 +226,13 @@ const getChartConfig = (ind) => {
       dataLabels: {
         enabled: true,
         style: {
-          fontSize: '12px',
-          colors: ['#000']
-        }
-      }
-    }
-  }
-}
+          fontSize: "12px",
+          colors: ["#000"],
+        },
+      },
+    },
+  };
+};
 </script>
 
 <style scoped>
@@ -241,5 +254,4 @@ const getChartConfig = (ind) => {
 .gap-3 {
   gap: 12px;
 }
-
 </style>

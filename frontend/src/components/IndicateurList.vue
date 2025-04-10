@@ -195,11 +195,11 @@ function saveEdit(ind) {
     .then((res) => {
       if (!res.ok) throw new Error("Erreur update");
       ind.editing = false;
-      alert("✅ Modification enregistrée !");
+      alert("Modification enregistrée !");
     })
     .catch((err) => {
       console.error(err);
-      alert("❌ Une erreur est survenue.");
+      alert("Une erreur est survenue.");
     });
 }
 
@@ -269,12 +269,12 @@ function validerMesure() {
       return res.json();
     })
     .then(() => {
-      alert("✅ Mesure ajoutée !");
+      alert("Mesure ajoutée !");
       showPopup.value = false;
     })
     .catch((err) => {
       console.error("Detailed error:", err);
-      alert(`❌ Une erreur est survenue: ${err.message}`);
+      alert(`Une erreur est survenue: ${err.message}`);
     });
 }
 

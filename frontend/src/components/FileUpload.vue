@@ -61,9 +61,6 @@ const handleDrop = (event) => {
   }
 };
 
-/**
- * Logique d'import (upload)
- */
 const handleFileUpload = async () => {
   if (!selectedFile.value) {
     alert("Aucun fichier sélectionné.");
@@ -76,19 +73,18 @@ const handleFileUpload = async () => {
   try {
     const response = await fetch("http://localhost:8989/api/import", {
       method: "POST",
-      body: formData
+      body: formData,
     });
 
     if (!response.ok) throw new Error("Erreur lors de l'import");
 
-    alert(`✅ Fichier "${selectedFile.value.name}" importé avec succès !`);
+    alert(`Fichier "${selectedFile.value.name}" importé avec succès !`);
 
-    // Reset
     selectedFile.value = null;
     fileInput.value.value = "";
   } catch (err) {
     console.error("Erreur import :", err);
-    alert("❌ Une erreur est survenue pendant l'import.");
+    alert("Une erreur est survenue pendant l'import.");
   }
 };
 </script>
