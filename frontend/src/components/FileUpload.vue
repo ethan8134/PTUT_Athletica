@@ -3,7 +3,6 @@
     <h2>Upload files</h2>
     <p>Select and upload the file of your choice</p>
 
-    <!-- Zone de drag & drop -->
     <div
       class="drop-zone"
       @dragover.prevent
@@ -21,47 +20,32 @@
       />
     </div>
 
-    <!-- Bouton pour déclencher la sélection manuelle -->
     <button class="btn-secondary" @click="triggerFileSelect">
       Sélectionner un fichier
     </button>
 
-    <!-- Bouton pour lancer l'import (upload) -->
     <button class="btn-primary" @click="handleFileUpload">Importer</button>
 
-    <!-- Bouton pour rediriger vers le formulaire session -->
     <div class="divider"></div>
-    <!-- Après -->
     <button class="btn-new-session" @click="$emit('start-session')">
       Commencer un enregistrement vierge
     </button>
-
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import SessionForm from "@/components/SessionForm.vue";
 
-
-// Refs pour le fichier sélectionné et l'input
 const fileInput = ref(null);
 const selectedFile = ref(null);
 const showSessionForm = ref(false);
-// Pour la navigation
 const router = useRouter();
 
-/**
- * Ouvrir le sélecteur de fichier
- */
 const triggerFileSelect = () => {
   fileInput.value.click();
 };
 
-/**
- * Gestion de la sélection via <input type="file">
- */
 const handleFileSelect = (event) => {
   if (event.target.files && event.target.files[0]) {
     selectedFile.value = event.target.files[0];
@@ -69,9 +53,6 @@ const handleFileSelect = (event) => {
   }
 };
 
-/**
- * Gestion du drag & drop
- */
 const handleDrop = (event) => {
   const file = event.dataTransfer.files[0];
   if (file) {
@@ -110,7 +91,6 @@ const handleFileUpload = async () => {
     alert("❌ Une erreur est survenue pendant l'import.");
   }
 };
-
 </script>
 
 <style scoped>
@@ -172,7 +152,6 @@ const handleFileUpload = async () => {
   font-size: 1rem;
 }
 
-/* Bouton pour sélectionner le fichier (bleu) */
 .btn-secondary {
   background-color: #007fff;
   color: #fff;
@@ -181,7 +160,6 @@ const handleFileUpload = async () => {
   background-color: #005bb5;
 }
 
-/* Bouton pour importer (vert) */
 .btn-primary {
   background-color: #4caf50;
   color: #fff;
@@ -190,14 +168,12 @@ const handleFileUpload = async () => {
   background-color: #43a047;
 }
 
-/* Ligne de séparation */
 .divider {
   margin: 20px 0;
   height: 1px;
   background: #ddd;
 }
 
-/* Bouton pour démarrer un enregistrement vierge (gris) */
 .btn-new-session {
   background-color: #888;
   color: #fff;

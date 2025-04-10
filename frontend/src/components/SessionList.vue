@@ -11,39 +11,43 @@
     <div class="table-container">
       <table>
         <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
+          <tr>
+            <th>Nom</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="ses in sessions" :key="ses.idSession">
-          <template v-if="editingSessionId === ses.idSession">
-            <td><input v-model="editedSession.nom" /></td>
-            <td><input type="date" v-model="editedSession.date" /></td>
-            <td class="action-buttons">
-              <button @click="saveEdit">💾 Enregistrer</button>
-              <button @click="cancelEdit">Annuler</button>
-            </td>
-          </template>
-          <template v-else>
-            <td>{{ ses.nom }}</td>
-            <td>{{ ses.date }}</td>
-            <td class="action-buttons">
-              <button @click="startEdit(ses)">Modifier</button>
-              <button @click="deleteSession(ses.idSession)">Supprimer</button>
-              <button @click="openAddMesureDialog(ses)">Ajouter une valeur</button>
-            </td>
-          </template>
-        </tr>
+          <tr v-for="ses in sessions" :key="ses.idSession">
+            <template v-if="editingSessionId === ses.idSession">
+              <td><input v-model="editedSession.nom" /></td>
+              <td><input type="date" v-model="editedSession.date" /></td>
+              <td class="action-buttons">
+                <button @click="saveEdit">💾 Enregistrer</button>
+                <button @click="cancelEdit">Annuler</button>
+              </td>
+            </template>
+            <template v-else>
+              <td>{{ ses.nom }}</td>
+              <td>{{ ses.date }}</td>
+              <td class="action-buttons">
+                <button @click="startEdit(ses)">Modifier</button>
+                <button @click="deleteSession(ses.idSession)">Supprimer</button>
+                <button @click="openAddMesureDialog(ses)">
+                  Ajouter une valeur
+                </button>
+              </td>
+            </template>
+          </tr>
         </tbody>
       </table>
     </div>
 
     <v-dialog v-model="showAddMesure" max-width="500px">
       <v-card>
-        <v-card-title>Ajouter une mesure à {{ selectedSession?.nom }}</v-card-title>
+        <v-card-title
+          >Ajouter une mesure à {{ selectedSession?.nom }}</v-card-title
+        >
         <v-card-text>
           <v-select
             label="Indicateur de session"
@@ -86,7 +90,7 @@ const editedSession = ref({});
 const showAddMesure = ref(false);
 const selectedSession = ref(null);
 const selectedIndicateurId = ref(null);
-const newMesure = ref({ valeur: '', dateMesure: '' });
+const newMesure = ref({ valeur: "", dateMesure: "" });
 const indicateursSession = ref([]);
 
 const apiBaseUrl = "http://localhost:8989/api/sessions";
@@ -115,7 +119,8 @@ watch(searchTerm, filterSessions);
 onMounted(fetchSessions);
 
 const deleteSession = (id) => {
-  if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette session ?")) return;
+  if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette session ?"))
+    return;
 
   fetch(`${apiBaseUrl}/${id}`, { method: "DELETE" })
     .then((response) => {
@@ -167,7 +172,11 @@ const openAddMesureDialog = (session) => {
 };
 
 const submitMesure = () => {
-  if (!selectedIndicateurId.value || !newMesure.value.valeur || !newMesure.value.dateMesure) {
+  if (
+    !selectedIndicateurId.value ||
+    !newMesure.value.valeur ||
+    !newMesure.value.dateMesure
+  ) {
     alert("Tous les champs sont obligatoires.");
     return;
   }
@@ -197,7 +206,6 @@ const submitMesure = () => {
 </script>
 
 <style scoped>
-/* 🎨 Tes styles inchangés */
 .list-container {
   border: solid 2px gray;
   border-radius: 15px;
@@ -239,7 +247,7 @@ td {
   height: 60px;
 }
 th {
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
 }
 tr:nth-child(even) {
@@ -254,7 +262,7 @@ tr:nth-child(even) {
   padding: 8px 12px;
   border: 1px solid black;
   border-radius: 5px;
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
   cursor: pointer;
   transition: background 0.3s;

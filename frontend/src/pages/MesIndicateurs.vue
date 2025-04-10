@@ -1,16 +1,19 @@
 <template>
   <v-container class="button-container">
-    <router-link to="/AjouterIndicateurGlobal" class="redirect-btn">
-      Enregistrer un nouvel indicateur global
-    </router-link>
+    <v-list-item to="/AjouterIndicateurGlobal" class="redirect-btn">
+      <v-list-item-title
+        >Enregistrer un nouvel indicateur global</v-list-item-title
+      >
+    </v-list-item>
 
-    <router-link to="/AjouterIndicateur" class="redirect-btn">
-      Enregistrer un nouvel indicateur sessions
-    </router-link>
+    <v-list-item to="/AjouterIndicateur" class="redirect-btn">
+      <v-list-item-title>Créer un indicateur de session</v-list-item-title>
+    </v-list-item>
 
-    <router-link to="/Indicateurs" class="redirect-btn">
-      Consulter mes Indicateurs
-    </router-link>
+    <v-list-item to="/Indicateurs" class="redirect-btn">
+      <v-list-item-title>Consulter mes Indicateurs</v-list-item-title>
+    </v-list-item>
+  </v-container>
 
   </v-container>
 </template>
@@ -89,27 +92,28 @@ const submitForm = async () => {
 
 </script>
 
-
-
 <style scoped>
 .button-container {
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  padding: 40px 0;
+  justify-content: space-evenly;
+  align-items: center;
+  margin: 0;
+  gap: 16px;
 }
 
-/* Style des boutons */
 .redirect-btn {
-  padding: 14px 24px;
-  background-color: #007fff;
-  color: white;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 16px;
+  display: flex;
+  width: 300px;
+  height: 170px;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: #0e0c70;
+  color: #ccc;
+  text-align: center;
   font-weight: bold;
+  text-decoration: none;
   transition: background-color 0.3s ease;
+  border-radius: 150px;
 }
 
 .redirect-btn:hover {

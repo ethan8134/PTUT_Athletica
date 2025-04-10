@@ -9,11 +9,11 @@ header {
   display: flex;
   align-items: center;
   padding: 15px;
-  background: #007fff;
+  background: #0e0c70;
   color: white;
   font-size: 1.8em;
   font-weight: bold;
-  border-bottom: 4px solid darkblue;
+  border-bottom: 4px solid lightgray;
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;

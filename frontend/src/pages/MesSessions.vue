@@ -14,27 +14,27 @@
 <style scoped>
 .button-container {
   display: flex;
-  justify-content: space-evenly; /* Répartit les éléments avec un espace égal */
+  justify-content: space-evenly;
   align-items: center;
   margin: 0;
-  gap: 16px; /* Optionnel : ajoute un espace fixe entre les boutons */
+  gap: 16px;
 }
 
-/* Style personnalisé pour rendre le bouton compact et visible */
 .redirect-btn {
   display: flex;
-  height: 90%;
+  width: 300px;
+  height: 170px;
+  justify-content: center;
   padding: 8px 16px;
-  background-color: #007fff;
-  color: #fff;
-  border-radius: 4px;
+  background-color: #0e0c70;
+  color: #ccc;
   text-align: center;
   font-weight: bold;
   text-decoration: none;
   transition: background-color 0.3s ease;
+  border-radius: 150px;
 }
 
-/* Changement de couleur au survol */
 .redirect-btn:hover {
   background-color: #005bb5;
 }

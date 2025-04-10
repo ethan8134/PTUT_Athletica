@@ -14,61 +14,74 @@
     <div class="table-container">
       <table>
         <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Unité</th>
-          <th>Catégorie</th>
-          <th>Type</th>
-          <th>Actions</th>
-        </tr>
+          <tr>
+            <th>Nom</th>
+            <th>Unité</th>
+            <th>Catégorie</th>
+            <th>Type</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="ind in paginatedIndicateurs" :key="ind.id">
-          <template v-if="ind.editing">
-            <td><input v-model="ind.nom" /></td>
-            <td><input v-model="ind.unite" /></td>
-            <td><input v-model="ind.categorie.nom" /></td>
-            <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
-            <td class="action-buttons">
-              <button @click="saveEdit(ind)">💾 Enregistrer</button>
-              <button @click="ind.editing = false">Annuler</button>
-            </td>
-          </template>
-          <template v-else>
-            <td>{{ ind.nom }}</td>
-            <td>{{ ind.unite }}</td>
-            <td>{{ ind.categorie.nom }}</td>
-            <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
-            <td class="action-buttons">
-              <button @click="startEdit(ind)">Modifier</button>
-              <button @click="deleteIndicateur(ind)">Supprimer</button>
-              <button
-                v-if="ind.type === 'global'"
-                @click="ajouterValeur(ind)"
-                class="ajouter-valeur"
-              >
-                ➕ Ajouter valeur
-              </button>
-            </td>
-          </template>
-        </tr>
+          <tr v-for="ind in paginatedIndicateurs" :key="ind.id">
+            <template v-if="ind.editing">
+              <td><input v-model="ind.nom" /></td>
+              <td><input v-model="ind.unite" /></td>
+              <td><input v-model="ind.categorie.nom" /></td>
+              <td>{{ ind.type === "global" ? "Global" : "Session" }}</td>
+              <td class="action-buttons">
+                <button @click="saveEdit(ind)">💾 Enregistrer</button>
+                <button @click="ind.editing = false">Annuler</button>
+              </td>
+            </template>
+            <template v-else>
+              <td>{{ ind.nom }}</td>
+              <td>{{ ind.unite }}</td>
+              <td>{{ ind.categorie.nom }}</td>
+              <td>{{ ind.type === "global" ? "Global" : "Session" }}</td>
+              <td class="action-buttons">
+                <button @click="startEdit(ind)">Modifier</button>
+                <button @click="deleteIndicateur(ind)">Supprimer</button>
+                <button
+                  v-if="ind.type === 'global'"
+                  @click="ajouterValeur(ind)"
+                  class="ajouter-valeur"
+                >
+                  ➕ Ajouter valeur
+                </button>
+              </td>
+            </template>
+          </tr>
         </tbody>
       </table>
     </div>
 
     <div class="pagination-controls">
-      <button :disabled="currentPage === 1" @click="currentPage--">← Précédent</button>
+      <button :disabled="currentPage === 1" @click="currentPage--">
+        ← Précédent
+      </button>
       <span>Page {{ currentPage }} / {{ totalPages }}</span>
-      <button :disabled="currentPage === totalPages" @click="currentPage++">Suivant →</button>
+      <button :disabled="currentPage === totalPages" @click="currentPage++">
+        Suivant →
+      </button>
     </div>
 
-    <!-- Popup d'ajout de mesure -->
     <v-dialog v-model="showPopup" max-width="500px">
       <v-card>
         <v-card-title class="headline">Ajouter une mesure</v-card-title>
         <v-card-text>
-          <v-text-field label="Valeur" type="number" v-model="newMesure.valeur" required />
-          <v-text-field label="Date" type="date" v-model="newMesure.dateMesure" required />
+          <v-text-field
+            label="Valeur"
+            type="number"
+            v-model="newMesure.valeur"
+            required
+          />
+          <v-text-field
+            label="Date"
+            type="date"
+            v-model="newMesure.dateMesure"
+            required
+          />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -81,18 +94,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from "vue";
 
 const indicateur = ref([]);
 const showDropdown = ref(false);
-const selectedType = ref('');
-const labelType = ref('Filtrer Catégorie');
+const selectedType = ref("");
+const labelType = ref("Filtrer Catégorie");
 const currentPage = ref(1);
 const itemsPerPage = 5;
 
 const showPopup = ref(false);
 const selectedIndicateur = ref(null);
-const newMesure = ref({ valeur: '', dateMesure: '' });
+const newMesure = ref({ valeur: "", dateMesure: "" });
 
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value;
@@ -103,13 +116,12 @@ const selectType = (type) => {
   currentPage.value = 1;
   showDropdown.value = false;
 
-  // Mise à jour du texte affiché
-  if (type === '') {
-    labelType.value = 'Toutes catégories';
-  } else if (type === 'global') {
-    labelType.value = 'Indicateurs Globaux';
-  } else if (type === 'session') {
-    labelType.value = 'Indicateurs Session';
+  if (type === "") {
+    labelType.value = "Toutes catégories";
+  } else if (type === "global") {
+    labelType.value = "Indicateurs Globaux";
+  } else if (type === "session") {
+    labelType.value = "Indicateurs Session";
   }
 
   filterIndicateurs();
@@ -119,24 +131,24 @@ const allIndicateurs = ref([]);
 
 function getIndicateurs() {
   fetch("http://localhost:8989/api/indicateurGlobals")
-    .then(res => res.json())
-    .then(dataGlobals => {
-      const globals = dataGlobals.map(ind => ({
+    .then((res) => res.json())
+    .then((dataGlobals) => {
+      const globals = dataGlobals.map((ind) => ({
         id: ind.idIndicateurGlobal,
         nom: ind.nom,
         unite: ind.unite,
         categorie: { nom: "Global" },
-        type: "global"
+        type: "global",
       }));
       fetch("http://localhost:8989/api/indicateurSessions")
-        .then(res => res.json())
-        .then(dataSessions => {
-          const sessions = dataSessions.map(ind => ({
+        .then((res) => res.json())
+        .then((dataSessions) => {
+          const sessions = dataSessions.map((ind) => ({
             id: ind.idIndicateurSession,
             nom: ind.nom,
             unite: ind.unite,
             categorie: ind.categorie || { nom: "Session" },
-            type: "session"
+            type: "session",
           }));
           allIndicateurs.value = [...globals, ...sessions];
           filterIndicateurs();
@@ -145,7 +157,7 @@ function getIndicateurs() {
 }
 
 function filterIndicateurs() {
-  indicateur.value = allIndicateurs.value.filter(ind =>
+  indicateur.value = allIndicateurs.value.filter((ind) =>
     selectedType.value ? ind.type === selectedType.value : true
   );
 }
@@ -164,14 +176,15 @@ function startEdit(ind) {
 }
 
 function saveEdit(ind) {
-  const url = ind.type === 'global'
-    ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
-    : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
+  const url =
+    ind.type === "global"
+      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
+      : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
 
   const body = {
     nom: ind.nom,
     unite: ind.unite,
-    categorie: { nom: ind.categorie.nom }
+    categorie: { nom: ind.categorie.nom },
   };
 
   fetch(url, {
@@ -179,33 +192,35 @@ function saveEdit(ind) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   })
-    .then(res => {
+    .then((res) => {
       if (!res.ok) throw new Error("Erreur update");
       ind.editing = false;
       alert("✅ Modification enregistrée !");
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       alert("❌ Une erreur est survenue.");
     });
 }
 
 function deleteIndicateur(ind) {
-  const url = ind.type === 'global'
-    ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
-    : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
+  const url =
+    ind.type === "global"
+      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
+      : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
 
-  fetch(url, { method: 'DELETE' })
-    .then(res => {
-      if (!res.ok) throw new Error();
-      allIndicateurs.value = allIndicateurs.value.filter(i => i.id !== ind.id || i.type !== ind.type);
-      filterIndicateurs();
-    });
+  fetch(url, { method: "DELETE" }).then((res) => {
+    if (!res.ok) throw new Error();
+    allIndicateurs.value = allIndicateurs.value.filter(
+      (i) => i.id !== ind.id || i.type !== ind.type
+    );
+    filterIndicateurs();
+  });
 }
 
 function ajouterValeur(ind) {
   selectedIndicateur.value = ind;
-  newMesure.value = { valeur: '', dateMesure: '' };
+  newMesure.value = { valeur: "", dateMesure: "" };
   showPopup.value = true;
 }
 
@@ -215,30 +230,29 @@ function validerMesure() {
     return;
   }
 
-  // Format date in ISO format to ensure compatibility
-  const formattedDate = new Date(newMesure.value.dateMesure).toISOString().split('T')[0];
+  const formattedDate = new Date(newMesure.value.dateMesure)
+    .toISOString()
+    .split("T")[0];
 
-  // Create the request body with the proper structure
   let body;
-  if (selectedIndicateur.value.type === 'global') {
+  if (selectedIndicateur.value.type === "global") {
     body = {
       valeur: parseFloat(newMesure.value.valeur),
       dateMesure: formattedDate,
       indicateurGlobal: {
-        idIndicateurGlobal: selectedIndicateur.value.id
-      }
+        idIndicateurGlobal: selectedIndicateur.value.id,
+      },
     };
   } else {
     body = {
       valeur: parseFloat(newMesure.value.valeur),
       dateMesure: formattedDate,
       indicateurSession: {
-        idIndicateurSession: selectedIndicateur.value.id
-      }
+        idIndicateurSession: selectedIndicateur.value.id,
+      },
     };
   }
 
-  // Add console.log to see what's being sent
   console.log("Sending data:", JSON.stringify(body));
 
   fetch("http://localhost:8989/api/mesures", {
@@ -248,8 +262,7 @@ function validerMesure() {
   })
     .then((res) => {
       if (!res.ok) {
-        // Get more info about the error
-        return res.text().then(text => {
+        return res.text().then((text) => {
           throw new Error(`Erreur API: ${text}`);
         });
       }
@@ -296,7 +309,7 @@ onMounted(getIndicateurs);
 .dropdown button {
   padding: 10px 15px;
   font-size: 16px;
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
   border: none;
   border-radius: 5px;
@@ -314,7 +327,7 @@ onMounted(getIndicateurs);
   border: 1px solid #ccc;
   border-radius: 5px;
   width: 200px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .dropdown-menu button {
@@ -328,7 +341,7 @@ onMounted(getIndicateurs);
 }
 
 .dropdown-menu button:hover {
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
 }
 
@@ -342,14 +355,15 @@ table {
   background-color: white;
 }
 
-th, td {
+th,
+td {
   padding: 12px 15px;
   border: 1px solid #ddd;
   text-align: left;
 }
 
 th {
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
   font-weight: bold;
 }
@@ -401,7 +415,7 @@ tr:nth-child(even) {
 
 .pagination-controls button {
   padding: 8px 16px;
-  background-color: #007fff;
+  background-color: #0e0c70;
   color: white;
   border: none;
   border-radius: 4px;
@@ -413,14 +427,13 @@ tr:nth-child(even) {
   cursor: not-allowed;
 }
 
-/* 🔽 Style du popup */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -433,7 +446,7 @@ tr:nth-child(even) {
   border-radius: 8px;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0px 6px 10px rgba(0,0,0,0.2);
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   gap: 15px;

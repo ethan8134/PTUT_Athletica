@@ -1,6 +1,8 @@
 <template>
   <v-container class="progressions-container">
-    <h2 class="text-h5 font-weight-bold mb-6 text-center">📊 Mes Progressions</h2>
+    <h2 class="text-h5 font-weight-bold mb-6 text-center">
+      📊 Mes Progressions
+    </h2>
 
     <v-select
       v-model="selectedIndicateurIds"
@@ -62,36 +64,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import ApexCharts from 'vue3-apexcharts'
+import { ref, onMounted, computed, watch } from "vue";
+import ApexCharts from "vue3-apexcharts";
 
-const indicateurs = ref([])
-const mesuresParIndicateur = ref({})
-const selectedIndicateurIds = ref([])
+const indicateurs = ref([]);
+const mesuresParIndicateur = ref({});
+const selectedIndicateurIds = ref([]);
 
 const fetchMesuresForIndicateur = async (ind) => {
   try {
-    const endpoint = ind.type === 'global'
-      ? `http://localhost:8989/api/mesures/indicateur-global/${ind.rawId}`
-      : `http://localhost:8989/api/mesures/indicateur-session/${ind.rawId}`
+    const endpoint =
+      ind.type === "global"
+        ? `http://localhost:8989/api/mesures/indicateur-global/${ind.rawId}`
+        : `http://localhost:8989/api/mesures/indicateur-session/${ind.rawId}`;
 
-    const res = await fetch(endpoint)
+    const res = await fetch(endpoint);
 
     if (!res.ok) {
-      console.error(`Erreur API ${res.status} pour ${ind.nom}`)
-      mesuresParIndicateur.value[ind.id] = []
-      return
+      console.error(`Erreur API ${res.status} pour ${ind.nom}`);
+      mesuresParIndicateur.value[ind.id] = [];
+      return;
     }
 
-    const data = await res.json()
-    mesuresParIndicateur.value[ind.id] = data.sort((a, b) =>
-      new Date(a.dateMesure) - new Date(b.dateMesure)
-    )
+    const data = await res.json();
+    mesuresParIndicateur.value[ind.id] = data.sort(
+      (a, b) => new Date(a.dateMesure) - new Date(b.dateMesure)
+    );
   } catch (err) {
-    console.error(`Erreur fetch mesures ${ind.nom}:`, err)
-    mesuresParIndicateur.value[ind.id] = []
+    console.error(`Erreur fetch mesures ${ind.nom}:`, err);
+    mesuresParIndicateur.value[ind.id] = [];
   }
-}
+};
 
 const supprimerMesure = async (ind, idMesure) => {
   const confirmDelete = confirm("Souhaites-tu vraiment supprimer cette mesure ? Cette action est irréversible.")
@@ -114,44 +117,51 @@ const supprimerMesure = async (ind, idMesure) => {
   }
 }
 
+
 onMounted(async () => {
   const [globals, sessions] = await Promise.all([
-    fetch("http://localhost:8989/api/indicateurGlobals").then(res => res.json()),
-    fetch("http://localhost:8989/api/indicateurSessions").then(res => res.json())
-  ])
+    fetch("http://localhost:8989/api/indicateurGlobals").then((res) =>
+      res.json()
+    ),
+    fetch("http://localhost:8989/api/indicateurSessions").then((res) =>
+      res.json()
+    ),
+  ]);
 
-  const mappedGlobals = globals.map(ind => ({
+  const mappedGlobals = globals.map((ind) => ({
     id: `g-${ind.idIndicateurGlobal}`,
-    nom: ind.nom + ' (Global)',
-    type: 'global',
-    rawId: ind.idIndicateurGlobal
-  }))
+    nom: ind.nom + " (Global)",
+    type: "global",
+    rawId: ind.idIndicateurGlobal,
+  }));
 
-  const mappedSessions = sessions.map(ind => ({
+  const mappedSessions = sessions.map((ind) => ({
     id: `s-${ind.idIndicateurSession}`,
-    nom: ind.nom + ' (Session)',
-    type: 'session',
-    rawId: ind.idIndicateurSession
-  }))
+    nom: ind.nom + " (Session)",
+    type: "session",
+    rawId: ind.idIndicateurSession,
+  }));
 
-  indicateurs.value = [...mappedGlobals, ...mappedSessions].filter(ind => ind.nom && ind.nom.trim() !== '')
-})
+  indicateurs.value = [...mappedGlobals, ...mappedSessions].filter(
+    (ind) => ind.nom && ind.nom.trim() !== ""
+  );
+});
 
 watch(selectedIndicateurIds, async (newIds) => {
   for (const id of newIds) {
     if (!mesuresParIndicateur.value[id]) {
-      const ind = indicateurs.value.find(i => i.id === id)
-      if (ind) await fetchMesuresForIndicateur(ind)
+      const ind = indicateurs.value.find((i) => i.id === id);
+      if (ind) await fetchMesuresForIndicateur(ind);
     }
   }
-})
+});
 
 const indicateursSelectionnes = computed(() =>
-  indicateurs.value.filter(i => selectedIndicateurIds.value.includes(i.id))
-)
+  indicateurs.value.filter((i) => selectedIndicateurIds.value.includes(i.id))
+);
 
 const getChartConfig = (ind) => {
-  const mesures = mesuresParIndicateur.value[ind.id] || []
+  const mesures = mesuresParIndicateur.value[ind.id] || [];
 
   return {
     series: [{
@@ -183,22 +193,22 @@ const getChartConfig = (ind) => {
       },
       title: {
         text: `${ind.nom}`,
-        align: 'center',
-        style: { fontSize: '16px' }
+        align: "center",
+        style: { fontSize: "16px" },
       },
       xaxis: {
-        title: { text: 'Date' },
-        type: 'category',
+        title: { text: "Date" },
+        type: "category",
         labels: {
           rotate: -45,
           style: {
-            fontSize: '12px',
-            colors: '#333'
-          }
-        }
+            fontSize: "12px",
+            colors: "#333",
+          },
+        },
       },
       yaxis: {
-        title: { text: 'Valeur mesurée' }
+        title: { text: "Valeur mesurée" },
       },
       dataLabels: {
         enabled: true,

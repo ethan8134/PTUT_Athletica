@@ -1,22 +1,12 @@
-/**
- * main.js
- *
- * Bootstraps Vuetify and other plugins then mounts the App`
- */
+import { registerPlugins } from "@/plugins";
 
-// Plugins
-import { registerPlugins } from '@/plugins'
+import App from "./App.vue";
 
-// Components
-import App from './App.vue'
+import { createApp } from "vue";
+import "./main.css";
 
-// Composables
-import { createApp } from 'vue'
-import './main.css';
+const app = createApp(App);
 
+registerPlugins(app);
 
-const app = createApp(App)
-
-registerPlugins(app)
-
-app.mount('#app')
+app.mount("#app");
