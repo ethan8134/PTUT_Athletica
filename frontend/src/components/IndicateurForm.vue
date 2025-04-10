@@ -3,6 +3,7 @@
     <h2>✍️ Ajouter un indicateur</h2>
     <form @submit.prevent="submitForm">
       <div class="form-group">
+
         <label>Nom de l'indicateur</label>
         <input
           v-model="indicateur.nom"
@@ -23,16 +24,6 @@
           placeholder="Ex: Indicateur de santé"
           required
         />
-      </div>
-
-      <div class="form-group">
-        <label>Valeur initiale</label>
-        <input v-model="mesure.valeur" type="number" placeholder="Ex: 12.5" />
-      </div>
-
-      <div class="form-group">
-        <label>Date de la mesure</label>
-        <input v-model="mesure.dateMesure" type="date" />
       </div>
 
       <div class="form-buttons">
@@ -185,31 +176,6 @@ const submitForm = async () => {
         .then((data) => {
           indicateursExistants.value = data;
         });
-    }
-
-    if (sessionId && mesure.value.valeur && mesure.value.dateMesure) {
-      const bodyMesure = {
-        valeur: parseFloat(mesure.value.valeur),
-        dateMesure: mesure.value.dateMesure,
-        indicateurSession: { idIndicateurSession: created.idIndicateurSession },
-        session: { idSession: parseInt(sessionId) },
-      };
-
-      console.log("Sending measurement data:", bodyMesure);
-
-      const resMesure = await fetch("http://localhost:8989/api/mesures", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyMesure),
-      });
-
-      if (!resMesure.ok) {
-        const errorText = await resMesure.text();
-        console.error("Server response for measurement:", errorText);
-        throw new Error(
-          `Error creating measurement: ${resMesure.status} ${resMesure.statusText}`
-        );
-      }
     }
 
     alert("✅ Indicateur (et mesure si possible) créé !");

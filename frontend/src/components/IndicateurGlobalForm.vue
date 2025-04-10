@@ -12,11 +12,6 @@
         <input v-model="indicateur.unite" placeholder="Ex: kg" required />
       </div>
 
-      <div class="form-group">
-        <label>Date</label>
-        <input type="date" v-model="indicateur.date" required />
-      </div>
-
       <div class="form-buttons">
         <button class="btn-primary" type="submit">✅ Valider</button>
         <button class="btn-cancel" type="button" @click="cancelForm">
@@ -40,21 +35,16 @@ const indicateur = ref({
 });
 
 const submitForm = async () => {
-  if (
-    !indicateur.value.nom ||
-    !indicateur.value.unite ||
-    !indicateur.value.date
-  ) {
-    alert("Veuillez remplir tous les champs.");
-    return;
+  if (!indicateur.value.nom || !indicateur.value.unite) {
+    alert('Veuillez remplir tous les champs.')
+    return
   }
 
   const body = {
     nom: indicateur.value.nom,
     unite: indicateur.value.unite,
-    date: indicateur.value.date,
-    utilisateur: { idPersonne: 1 },
-  };
+    utilisateur: { idPersonne: 1 }, // ✅ ok si l'utilisateur est fixe
+  }
 
   try {
     const res = await fetch("http://localhost:8989/api/indicateurGlobals", {

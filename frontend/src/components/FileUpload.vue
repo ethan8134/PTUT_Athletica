@@ -61,19 +61,35 @@ const handleDrop = (event) => {
   }
 };
 
-const handleFileUpload = () => {
+/**
+ * Logique d'import (upload)
+ */
+const handleFileUpload = async () => {
   if (!selectedFile.value) {
     alert("Aucun fichier sélectionné.");
     return;
   }
-  console.log("Import du fichier :", selectedFile.value.name);
-  alert(`Fichier "${selectedFile.value.name}" importé avec succès !`);
-  selectedFile.value = null;
-  fileInput.value.value = "";
-};
 
-const redirectToSessionForm = () => {
-  showSessionForm.value = true;
+  const formData = new FormData();
+  formData.append("file", selectedFile.value);
+
+  try {
+    const response = await fetch("http://localhost:8989/api/import", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) throw new Error("Erreur lors de l'import");
+
+    alert(`✅ Fichier "${selectedFile.value.name}" importé avec succès !`);
+
+    // Reset
+    selectedFile.value = null;
+    fileInput.value.value = "";
+  } catch (err) {
+    console.error("Erreur import :", err);
+    alert("❌ Une erreur est survenue pendant l'import.");
+  }
 };
 </script>
 

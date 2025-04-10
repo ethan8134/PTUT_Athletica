@@ -36,4 +36,9 @@ public class MesureController {
     public Mesure addMesure(@RequestBody Mesure mesure) {
         return mesureRepository.save(mesure);
     }
+
+    @DeleteMapping("/{id}")
+    public void deleteMesure(@PathVariable Integer id) {
+        mesureRepository.deleteById(id);
+    }
 }
