@@ -1,67 +1,55 @@
 <template>
-  <div class="upload-container">
-    <h2>Upload files</h2>
-    <p>Select and upload the file of your choice</p>
+  <div class="file-upload-page">
+    <button class="cancel-btn" type="button" @click="returnMesSessions">
+      Retour
+    </button>
+    <div class="upload-container">
+      <h2>Upload files</h2>
+      <p>Select and upload the file of your choice</p>
 
-    <!-- Zone de drag & drop -->
-    <div
-      class="drop-zone"
-      @dragover.prevent
-      @dragenter.prevent
-      @drop.prevent="handleDrop"
-    >
-      <p>Choose a file or drag &amp; drop it here</p>
-      <p class="formats">CSV, JSON formats, up to 50MB</p>
-      <input
-        class="file-input"
-        type="file"
-        ref="fileInput"
-        @change="handleFileSelect"
-        accept=".csv,.json"
-      />
+      <div
+        class="drop-zone"
+        @dragover.prevent
+        @dragenter.prevent
+        @drop.prevent="handleDrop"
+      >
+        <p>Choose a file or drag &amp; drop it here</p>
+        <p class="formats">CSV, JSON formats, up to 50MB</p>
+        <input
+          class="file-input"
+          type="file"
+          ref="fileInput"
+          @change="handleFileSelect"
+          accept=".csv,.json"
+        />
+      </div>
+
+      <button class="btn-secondary" @click="triggerFileSelect">
+        Sélectionner un fichier
+      </button>
+
+      <button class="btn-primary" @click="handleFileUpload">Importer</button>
+
+      <div class="divider"></div>
+      <button class="btn-new-session" @click="$emit('start-session')">
+        Commencer un enregistrement vierge
+      </button>
     </div>
-
-    <!-- Bouton pour déclencher la sélection manuelle -->
-    <button class="btn-secondary" @click="triggerFileSelect">
-      Sélectionner un fichier
-    </button>
-
-    <!-- Bouton pour lancer l'import (upload) -->
-    <button class="btn-primary" @click="handleFileUpload">Importer</button>
-
-    <!-- Bouton pour rediriger vers le formulaire session -->
-    <div class="divider"></div>
-    <!-- Après -->
-    <button class="btn-new-session" @click="$emit('start-session')">
-      Commencer un enregistrement vierge
-    </button>
-
   </div>
 </template>
-
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import SessionForm from "@/components/SessionForm.vue";
 
-
-// Refs pour le fichier sélectionné et l'input
 const fileInput = ref(null);
 const selectedFile = ref(null);
 const showSessionForm = ref(false);
-// Pour la navigation
 const router = useRouter();
 
-/**
- * Ouvrir le sélecteur de fichier
- */
 const triggerFileSelect = () => {
   fileInput.value.click();
 };
 
-/**
- * Gestion de la sélection via <input type="file">
- */
 const handleFileSelect = (event) => {
   if (event.target.files && event.target.files[0]) {
     selectedFile.value = event.target.files[0];
@@ -69,9 +57,6 @@ const handleFileSelect = (event) => {
   }
 };
 
-/**
- * Gestion du drag & drop
- */
 const handleDrop = (event) => {
   const file = event.dataTransfer.files[0];
   if (file) {
@@ -80,36 +65,66 @@ const handleDrop = (event) => {
   }
 };
 
-/**
- * Logique d'import (upload)
- */
-const handleFileUpload = () => {
+const handleFileUpload = async () => {
   if (!selectedFile.value) {
     alert("Aucun fichier sélectionné.");
     return;
   }
-  // Exemple minimal : on log simplement le nom du fichier
-  // Vous pouvez appeler votre API pour l'import
-  console.log("Import du fichier :", selectedFile.value.name);
-  alert(`Fichier "${selectedFile.value.name}" importé avec succès !`);
-  // Réinitialiser
-  selectedFile.value = null;
-  fileInput.value.value = "";
+
+  const formData = new FormData();
+  formData.append("file", selectedFile.value);
+
+  try {
+    const response = await fetch("http://localhost:8989/api/import", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Erreur lors de l'import");
+
+    alert(`Fichier "${selectedFile.value.name}" importé avec succès !`);
+
+    selectedFile.value = null;
+    fileInput.value.value = "";
+  } catch (err) {
+    console.error("Erreur import :", err);
+    alert("Une erreur est survenue pendant l'import.");
+  }
 };
 
-/**
- * Redirection vers le formulaire Session
- */
-const redirectToSessionForm = () => {
-  showSessionForm.value = true;
+const returnMesSessions = () => {
+  router.push("/MesSessions");
 };
-
 </script>
 
 <style scoped>
+.file-upload-page {
+  display: flex;
+  align-items: flex-start; /* Aligne les éléments en haut */
+  gap: 20px; /* Espace entre le bouton et le conteneur */
+  padding: 20px;
+}
+
+.cancel-btn {
+  background-color: #0e0c70;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  height: fit-content; /* Ajuste la hauteur pour s'aligner avec le conteneur */
+}
+
+.cancel-btn:hover {
+  background-color: #0c085a;
+}
+
 .upload-container {
+  flex: 1; /* Prend tout l'espace restant */
   max-width: 500px;
-  margin: 40px auto;
+  margin: 0 auto; /* Centre horizontalement */
   padding: 20px 25px;
   background: #fff;
   border-radius: 8px;
@@ -165,7 +180,6 @@ const redirectToSessionForm = () => {
   font-size: 1rem;
 }
 
-/* Bouton pour sélectionner le fichier (bleu) */
 .btn-secondary {
   background-color: #007fff;
   color: #fff;
@@ -174,7 +188,6 @@ const redirectToSessionForm = () => {
   background-color: #005bb5;
 }
 
-/* Bouton pour importer (vert) */
 .btn-primary {
   background-color: #4caf50;
   color: #fff;
@@ -183,14 +196,12 @@ const redirectToSessionForm = () => {
   background-color: #43a047;
 }
 
-/* Ligne de séparation */
 .divider {
   margin: 20px 0;
   height: 1px;
   background: #ddd;
 }
 
-/* Bouton pour démarrer un enregistrement vierge (gris) */
 .btn-new-session {
   background-color: #888;
   color: #fff;

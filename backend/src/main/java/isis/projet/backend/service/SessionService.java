@@ -1,9 +1,11 @@
 package isis.projet.backend.service;
 
 import isis.projet.backend.dao.SessionRepository;
+import isis.projet.backend.dao.MesureRepository;
 import isis.projet.backend.entity.Session;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -12,9 +14,11 @@ import java.util.Optional;
 public class SessionService {
 
     private final SessionRepository sessionRepository;
+    private final MesureRepository mesureRepository;
 
-    public SessionService(SessionRepository sessionRepository) {
+    public SessionService(SessionRepository sessionRepository, MesureRepository mesureRepository) {
         this.sessionRepository = sessionRepository;
+        this.mesureRepository = mesureRepository;
     }
 
     public List<Session> getAllSessions() {
@@ -40,6 +44,8 @@ public class SessionService {
 
     public boolean deleteSession(Integer id) {
         if (sessionRepository.existsById(id)) {
+            // 🔥 Supprimer d’abord les mesures liées à cette session
+            mesureRepository.deleteBySessionId(id);
             sessionRepository.deleteById(id);
             return true;
         }

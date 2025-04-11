@@ -1,14 +1,8 @@
 <template>
   <div class="list-container">
     <div class="search-container">
-      <input
-        type="text"
-        v-model="searchTerm"
-        placeholder="Rechercher un indicateur..."
-      />
-
       <div class="dropdown">
-        <button @click="toggleDropdown">Filtrer Catégorie ▼</button>
+        <button @click="toggleDropdown">{{ labelType }} ▼</button>
         <div v-if="showDropdown" class="dropdown-menu">
           <button @click="selectType('')">Toutes catégories</button>
           <button @click="selectType('global')">Indicateurs Globaux</button>
@@ -20,369 +14,475 @@
     <div class="table-container">
       <table>
         <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Unité</th>
-          <th>Catégorie</th>
-          <th>Type</th>
-          <th>Actions</th>
-        </tr>
+          <tr>
+            <th>Nom</th>
+            <th>Unité</th>
+            <th>Catégorie</th>
+            <th>Type</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody>
-        <tr v-for="ind in indicateur" :key="ind.id">
-          <td v-if="!ind.editing">{{ ind.nom }}</td>
-          <td v-else><input v-model="ind.nom" /></td>
-
-
-          <td v-if="!ind.editing">{{ ind.unite }}</td>
-          <td v-else><input v-model="ind.unite" /></td>
-
-          <td v-if="!ind.editing">{{ ind.categorie.nom }}</td>
-          <td v-else><input v-model="ind.categorie.nom" /></td>
-
-          <td>{{ ind.type === 'global' ? 'Global' : 'Session' }}</td>
-
-          <td class="action-buttons">
-            <button v-if="!ind.editing" @click="startEdit(ind)">Modifier</button>
-            <button v-else @click="updateIndicateur(ind)">Valider</button>
-            <button v-if="ind.editing" @click="cancelEdit(ind)">Annuler</button>
-            <button @click="() => deleteIndicateur(ind)">Supprimer</button>
-          </td>
-        </tr>
+          <tr v-for="ind in paginatedIndicateurs" :key="ind.id">
+            <template v-if="ind.editing">
+              <td><input v-model="ind.nom" /></td>
+              <td><input v-model="ind.unite" /></td>
+              <td><input v-model="ind.categorie.nom" /></td>
+              <td>{{ ind.type === "global" ? "Global" : "Session" }}</td>
+              <td class="action-buttons">
+                <button @click="saveEdit(ind)">💾 Enregistrer</button>
+                <button @click="ind.editing = false">Annuler</button>
+              </td>
+            </template>
+            <template v-else>
+              <td>{{ ind.nom }}</td>
+              <td>{{ ind.unite }}</td>
+              <td>{{ ind.categorie.nom }}</td>
+              <td>{{ ind.type === "global" ? "Global" : "Session" }}</td>
+              <td class="action-buttons">
+                <button @click="startEdit(ind)">Modifier</button>
+                <button @click="deleteIndicateur(ind)">Supprimer</button>
+                <button
+                  v-if="ind.type === 'global'"
+                  @click="ajouterValeur(ind)"
+                  class="ajouter-valeur"
+                >
+                  ➕ Ajouter valeur
+                </button>
+              </td>
+            </template>
+          </tr>
         </tbody>
       </table>
     </div>
+
+    <div class="pagination-controls">
+      <button :disabled="currentPage === 1" @click="currentPage--">
+        ← Précédent
+      </button>
+      <span>Page {{ currentPage }} / {{ totalPages }}</span>
+      <button :disabled="currentPage === totalPages" @click="currentPage++">
+        Suivant →
+      </button>
+    </div>
+
+    <v-dialog v-model="showPopup" max-width="500px">
+      <v-card>
+        <v-card-title class="headline">Ajouter une mesure</v-card-title>
+        <v-card-text>
+          <v-text-field
+            label="Valeur"
+            type="number"
+            v-model="newMesure.valeur"
+            required
+          />
+          <v-text-field
+            label="Date"
+            type="date"
+            v-model="newMesure.dateMesure"
+            required
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="blue" @click="validerMesure">Valider</v-btn>
+          <v-btn color="grey" @click="showPopup = false">Annuler</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 
-const searchTerm = ref("");
 const indicateur = ref([]);
-const allIndicateurs = ref([]);
 const showDropdown = ref(false);
 const selectedType = ref("");
-const originalIndicateur = ref({});
+const labelType = ref("Filtrer Catégorie");
+const currentPage = ref(1);
+const itemsPerPage = 5;
+
+const showPopup = ref(false);
+const selectedIndicateur = ref(null);
+const newMesure = ref({ valeur: "", dateMesure: "" });
+
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value;
+};
+
+const selectType = (type) => {
+  selectedType.value = type;
+  currentPage.value = 1;
+  showDropdown.value = false;
+
+  if (type === "") {
+    labelType.value = "Toutes catégories";
+  } else if (type === "global") {
+    labelType.value = "Indicateurs Globaux";
+  } else if (type === "session") {
+    labelType.value = "Indicateurs Session";
+  }
+
+  filterIndicateurs();
+};
+
+const allIndicateurs = ref([]);
+
+function getIndicateurs() {
+  fetch("http://localhost:8989/api/indicateurGlobals")
+    .then((res) => res.json())
+    .then((dataGlobals) => {
+      const globals = dataGlobals.map((ind) => ({
+        id: ind.idIndicateurGlobal,
+        nom: ind.nom,
+        unite: ind.unite,
+        categorie: { nom: "Global" },
+        type: "global",
+      }));
+      fetch("http://localhost:8989/api/indicateurSessions")
+        .then((res) => res.json())
+        .then((dataSessions) => {
+          const sessions = dataSessions.map((ind) => ({
+            id: ind.idIndicateurSession,
+            nom: ind.nom,
+            unite: ind.unite,
+            categorie: ind.categorie || { nom: "Session" },
+            type: "session",
+          }));
+          allIndicateurs.value = [...globals, ...sessions];
+          filterIndicateurs();
+        });
+    });
+}
+
+function filterIndicateurs() {
+  indicateur.value = allIndicateurs.value.filter((ind) =>
+    selectedType.value ? ind.type === selectedType.value : true
+  );
+}
+
+const totalPages = computed(() =>
+  Math.ceil(indicateur.value.length / itemsPerPage)
+);
+
+const paginatedIndicateurs = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return indicateur.value.slice(start, start + itemsPerPage);
+});
 
 function startEdit(ind) {
   ind.editing = true;
 }
 
-function cancelEdit(ind) {
-  ind.editing = false;
-  getIndicateurs(); // Pour remettre à jour après annulation
-}
-function getIndicateurs() {
-  const fetchOptions = { method: "GET" };
-
-  // Fetch indicateurs globaux
-  fetch("http://localhost:8989/api/indicateurGlobals", fetchOptions)
-    .then(response => response.json())
-    .then(dataGlobals => {
-      const globals = dataGlobals.map(ind => ({
-        id: ind.idIndicateurGlobal,
-        nom: ind.nom,
-        unite: ind.unite,
-        categorie: { nom: "Global" }, // Pas de catégorie précise côté global, tu peux adapter
-        type: "global"
-      }));
-
-      // Fetch indicateurs sessions
-      fetch("http://localhost:8989/api/indicateurSessions", fetchOptions)
-        .then(response => response.json())
-        .then(dataSessions => {
-          const sessions = dataSessions.map(ind => ({
-            id: ind.idIndicateurSession,
-            nom: ind.nom,
-            unite: ind.unite,
-            categorie: ind.categorie || { nom: "Session" }, // Si pas de catégorie côté backend, adapter ici
-            type: "session"
-          }));
-
-          // Fusionner les deux listes
-          allIndicateurs.value = [...globals, ...sessions];
-          filterIndicateurs();
-        });
-    })
-    .catch(error => console.error("Erreur récupération indicateurs :", error));
-}
-
-
-function filterIndicateurs() {
-  indicateur.value = allIndicateurs.value.filter(ind => {
-    const matchesSearch = searchTerm.value
-      ? ind.nom.toLowerCase().includes(searchTerm.value.toLowerCase())
-      : true;
-    const matchesType = selectedType.value
-      ? ind.type === selectedType.value
-      : true;
-    return matchesSearch && matchesType;
-  });
-}
-
-function toggleDropdown() {
-  showDropdown.value = !showDropdown.value;
-}
-
-function selectType(type) {
-  selectedType.value = type;
-  showDropdown.value = false;
-  filterIndicateurs();
-}
-
-function updateIndicateur(ind) {
-  const updatedInd = {
-    nom: ind.nom,
-    unite: ind.unite,
-    date: new Date().toISOString().split('T')[0],
-    utilisateur: { idPersonne: 1 },
-    categorie: ind.type === "session" ? { idCategorie: ind.categorie?.idCategorie || 1 } : null
-  };
-
-  const url = ind.type === "global"
-    ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
-    : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
-
-  const fetchOptions = {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedInd)
-  };
-
-  fetch(url, fetchOptions)
-    .then((response) => {
-      if (!response.ok) throw new Error("Erreur mise à jour");
-      return response.json();
-    })
-    .then(() => {
-      ind.editing = false;
-      getIndicateurs(); // Recharge la liste
-      alert("Indicateur modifié !");
-    })
-    .catch((error) => console.error("Erreur mise à jour :", error));
-}
-
-function deleteIndicateur(ind) {
-  if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet indicateur ?")) {
-    return;
-  }
+function saveEdit(ind) {
   const url =
     ind.type === "global"
       ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
       : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
 
-  const fetchOptions = { method: "DELETE" };
-  fetch(url, fetchOptions)
-    .then((response) => {
-      if (!response.ok) throw new Error("Erreur suppression");
-      // Supprimer localement
-      allIndicateurs.value = allIndicateurs.value.filter((i) => i.id !== ind.id);
-      filterIndicateurs();
-      alert("Indicateur supprimé !");
+  const body = {
+    nom: ind.nom,
+    unite: ind.unite,
+    categorie: { nom: ind.categorie.nom },
+  };
+
+  fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Erreur update");
+      ind.editing = false;
+      alert("Modification enregistrée !");
     })
-    .catch((error) => console.error("Erreur suppression :", error));
+    .catch((err) => {
+      console.error(err);
+      alert("Une erreur est survenue.");
+    });
 }
 
-watch(searchTerm, filterIndicateurs);
-onMounted(getIndicateurs);
+function deleteIndicateur(ind) {
+  const url =
+    ind.type === "global"
+      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
+      : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
 
+  fetch(url, { method: "DELETE" }).then((res) => {
+    if (!res.ok) throw new Error();
+    allIndicateurs.value = allIndicateurs.value.filter(
+      (i) => i.id !== ind.id || i.type !== ind.type
+    );
+    filterIndicateurs();
+  });
+}
+
+function ajouterValeur(ind) {
+  selectedIndicateur.value = ind;
+  newMesure.value = { valeur: "", dateMesure: "" };
+  showPopup.value = true;
+}
+
+function validerMesure() {
+  if (!newMesure.value.valeur || !newMesure.value.dateMesure) {
+    alert("Veuillez remplir tous les champs.");
+    return;
+  }
+
+  const formattedDate = new Date(newMesure.value.dateMesure)
+    .toISOString()
+    .split("T")[0];
+
+  let body;
+  if (selectedIndicateur.value.type === "global") {
+    body = {
+      valeur: parseFloat(newMesure.value.valeur),
+      dateMesure: formattedDate,
+      indicateurGlobal: {
+        idIndicateurGlobal: selectedIndicateur.value.id,
+      },
+    };
+  } else {
+    body = {
+      valeur: parseFloat(newMesure.value.valeur),
+      dateMesure: formattedDate,
+      indicateurSession: {
+        idIndicateurSession: selectedIndicateur.value.id,
+      },
+    };
+  }
+
+  console.log("Sending data:", JSON.stringify(body));
+
+  fetch("http://localhost:8989/api/mesures", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+    .then((res) => {
+      if (!res.ok) {
+        return res.text().then((text) => {
+          throw new Error(`Erreur API: ${text}`);
+        });
+      }
+      return res.json();
+    })
+    .then(() => {
+      alert("Mesure ajoutée !");
+      showPopup.value = false;
+    })
+    .catch((err) => {
+      console.error("Detailed error:", err);
+      alert(`Une erreur est survenue: ${err.message}`);
+    });
+}
+
+onMounted(getIndicateurs);
 </script>
 
-
 <style scoped>
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
-  margin: 0;
-  padding: 0;
-}
-
-.container {
-  width: 90%;
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  background: white;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-}
-
-button {
-  background-color: #007fff;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.3s ease-in-out;
-}
-
-table {
-  width: 100%;
-
-  background: lightgray;
-}
-
-.table-container td input {
-  padding: 5px;
-  border: 1px solid black;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
-  color: black;
-  vertical-align: middle;
-  height: 60px;
-}
-
-th {
-  background-color: #007fff;
-  color: white;
-}
-
-tr:nth-child(even) {
-  background: #f9f9f9;
-}
-
-img {
-  border-radius: 5px;
-  max-width: 50px;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 5px;
-  height: 100px;
-}
-
-.action-buttons button {
-  flex: 1;
-  padding: 8px 12px;
-  margin: auto 0px;
-  height: 40px;
-  width: 60px;
-  text-align: center;
+.list-container {
   border: solid;
-  border-color: black;
-  border-width: 1px;
-}
-
-.action-buttons button:hover {
-  background-color: darkblue;
-}
-
-.button-container {
-  margin-top: 15px;
-  display: flex;
-  justify-content: center;
-}
-
-.button-container button {
-  width: 100%;
-  max-width: 100%;
-  padding: 12px;
-  font-size: 18px;
-  background-color: #007fff;
-  border-radius: 5px;
-  border: none;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease-in-out;
-}
-
-.button-container button:hover {
-  background-color: darkblue;
+  border-radius: 15px;
+  border-color: gray;
+  box-shadow: 2px 2px 2px gray;
+  margin: 30px auto;
+  padding: 20px;
+  border-width: 2px;
+  background-color: #f9f9f9;
+  max-width: 1200px;
 }
 
 .search-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 10px;
-  margin: 20px auto;
-  width: 100%;
-}
-
-.search-container input {
-  flex: 1;
-  max-width: 400px;
-  padding: 10px;
-  border: 1px solid black;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: border 0.3s ease-in-out;
-}
-
-.search-container input:focus {
-  outline: none;
-}
-
-.search-container button {
-  padding: 10px 15px;
-  font-size: 16px;
-  background-color: #007fff;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-  transition: background 0.3s ease-in-out;
-}
-
-.search-container button:hover {
-  background-color: darkblue;
+  margin-bottom: 20px;
 }
 
 .dropdown {
   position: relative;
 }
 
+.dropdown button {
+  padding: 10px 15px;
+  font-size: 16px;
+  background-color: #0e0c70;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
   width: 200px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .dropdown-menu button {
-  background: white;
-  color: black;
-  padding: 10px;
+  background: none;
   border: none;
+  padding: 10px;
   text-align: left;
-  width: 100%;
   cursor: pointer;
-  transition: background 0.3s ease-in-out;
+  width: 100%;
+  color: black;
 }
 
 .dropdown-menu button:hover {
-  background: #007fff;
+  background-color: #0e0c70;
   color: white;
 }
 
-.list-container {
-  border: solid;
-  border-radius: 15px;
-  border-color: gray;
-  box-shadow: 2px 2px 2px gray;
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+th,
+td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background-color: #0e0c70;
+  color: white;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-buttons button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.action-buttons button:nth-child(1) {
+  background-color: #ffc107;
+  color: black;
+}
+
+.action-buttons button:nth-child(2) {
+  background-color: #dc3545;
+  color: white;
+}
+
+.action-buttons .ajouter-valeur {
+  background-color: #28a745;
+  color: white;
+}
+
+.action-buttons .ajouter-valeur:hover {
+  background-color: #218838;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-top: 15px;
-  padding: 5px;
-  border-width: 2px;
-  background-color: lightgray;
+  gap: 20px;
+}
+
+.pagination-controls button {
+  padding: 8px 16px;
+  background-color: #0e0c70;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination-controls button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background-color: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal h3 {
+  margin-top: 0;
+}
+
+.modal input {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.modal button {
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modal .valider {
+  background-color: #28a745;
+  color: white;
+}
+
+.modal .annuler {
+  background-color: #dc3545;
+  color: white;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
 }
 </style>

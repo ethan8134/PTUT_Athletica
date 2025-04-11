@@ -8,6 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/mesures")
+@CrossOrigin(origins = "http://localhost:3000") // adapte si besoin
 public class MesureController {
 
     private final MesureRepository mesureRepository;
@@ -16,13 +17,28 @@ public class MesureController {
         this.mesureRepository = mesureRepository;
     }
 
-    @GetMapping("/indicateur/{idIndicateurSession}")
-    public List<Mesure> getByIndicateurSession(@PathVariable Integer idIndicateurSession) {
-        return mesureRepository.findByIndicateurSessionIdIndicateurSession(idIndicateurSession);
+    @GetMapping("/indicateur-global/{id}")
+    public List<Mesure> getByIndicateurGlobal(@PathVariable Integer id) {
+        return mesureRepository.findByIndicateurGlobalIdIndicateurGlobal(id);
+    }
+
+    @GetMapping("/indicateur-session/{id}")
+    public List<Mesure> getByIndicateurSession(@PathVariable Integer id) {
+        return mesureRepository.findByIndicateurSessionIdIndicateurSession(id);
+    }
+
+    @GetMapping
+    public List<Mesure> getAllMesures() {
+        return mesureRepository.findAll();
     }
 
     @PostMapping
     public Mesure addMesure(@RequestBody Mesure mesure) {
         return mesureRepository.save(mesure);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteMesure(@PathVariable Integer id) {
+        mesureRepository.deleteById(id);
     }
 }

@@ -36,6 +36,8 @@ public class IndicateurSessionService {
                     existing.setNom(indicateur.getNom());
                     existing.setUnite(indicateur.getUnite());
                     existing.setDate(indicateur.getDate());
+                    existing.setCategorie(indicateur.getCategorie());
+                    existing.setUtilisateur(indicateur.getUtilisateur());
                     return indicateurSessionRepository.save(existing);
                 }).orElse(null);
     }

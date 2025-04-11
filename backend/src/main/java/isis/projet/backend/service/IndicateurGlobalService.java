@@ -36,6 +36,7 @@ public class IndicateurGlobalService {
                     existing.setNom(indicateur.getNom());
                     existing.setUnite(indicateur.getUnite());
                     existing.setDate(indicateur.getDate());
+                    existing.setUtilisateur(indicateur.getUtilisateur());
                     return indicateurGlobalRepository.save(existing);
                 }).orElse(null);
     }

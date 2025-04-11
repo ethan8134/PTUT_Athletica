@@ -8,6 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/indicateurGlobals")
+@CrossOrigin(origins = "http://localhost:3000")
 public class IndicateurGlobalController {
 
     private final IndicateurGlobalRepository indicateurGlobalRepository;
@@ -16,17 +17,16 @@ public class IndicateurGlobalController {
         this.indicateurGlobalRepository = indicateurGlobalRepository;
     }
 
-    // GET : récupère tous les indicateurs globaux
     @GetMapping
     public List<IndicateurGlobal> getAllIndicateursGlobaux() {
         return indicateurGlobalRepository.findAll();
     }
+
     @PostMapping
     public IndicateurGlobal createIndicateurGlobal(@RequestBody IndicateurGlobal indicateur) {
         return indicateurGlobalRepository.save(indicateur);
     }
 
-    // PUT : mise à jour d'un indicateur global
     @PutMapping("/{id}")
     public IndicateurGlobal updateIndicateurGlobal(@PathVariable Integer id, @RequestBody IndicateurGlobal updatedIndicateur) {
         return indicateurGlobalRepository.findById(id).map(ind -> {
@@ -37,7 +37,6 @@ public class IndicateurGlobalController {
         }).orElseThrow(() -> new RuntimeException("Indicateur Global non trouvé"));
     }
 
-    // DELETE : suppression
     @DeleteMapping("/{id}")
     public void deleteIndicateurGlobal(@PathVariable Integer id) {
         indicateurGlobalRepository.deleteById(id);

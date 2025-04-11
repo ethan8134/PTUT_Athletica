@@ -5,5 +5,6 @@
 </template>
 
 <script setup>
+
 import IndicateurForm from "../components/IndicateurForm.vue";
 </script>
