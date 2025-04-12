@@ -33,7 +33,7 @@
               <h3 class="text-h6 font-weight-bold mt-2">Vos Sessions</h3>
               <p class="text-body-2">
                 Sentez vous libre d'organiser et de personnaliser vos sessions
-                pour rester fidèle à vous même.
+                pour rester fidèle à vous-même.
               </p>
             </v-col>
           </v-row>
@@ -43,16 +43,16 @@
               <v-icon size="48" color="success">mdi-calendar-clock</v-icon>
               <h3 class="text-h6 font-weight-bold mt-2">Vos Indicateurs</h3>
               <p class="text-body-2">
-                Profitez de l'aspect personnalisable que possède Athletica pour
-                rendre votre expérience la plus détaillée.
+                Profitez de l'aspect personnalisable qu'offre Athletica pour
+                rendre votre expérience la plus fidèle possible.
               </p>
             </v-col>
             <v-col cols="12" md="6" class="text-center">
               <v-icon size="48" color="warning">mdi-trophy</v-icon>
               <h3 class="text-h6 font-weight-bold mt-2">Esprit sportif</h3>
               <p class="text-body-2">
-                Utilisez cette outil pour parvenir à vos objectifs et devenir la
-                meilleure version de vous même.
+                Utilisez cet outil pour atteindre vos objectifs et devenir la
+                meilleure version de vous-même.
               </p>
             </v-col>
           </v-row>
