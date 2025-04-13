@@ -38,16 +38,20 @@ const dialog = ref(false);
 const newMesure = ref("");
 
 const submitMesure = () => {
+  // Vérifie si la valeur est valide
   if (!newMesure.value || isNaN(newMesure.value)) {
+    // Vérifie si la valeur est vide ou non numérique
     alert("Veuillez saisir une valeur numérique valide.");
     return;
   }
 
   const body = {
-    valeur: parseFloat(newMesure.value),
-    dateMesure: new Date().toISOString().split("T")[0],
+    // Crée le corps de la requête
+    valeur: parseFloat(newMesure.value), // Convertit la valeur en nombre flottant
+    dateMesure: new Date().toISOString().split("T")[0], // Récupère la date actuelle au format ISO
     indicateurSession: {
-      idIndicateurSession: props.indicateur.idIndicateurSession,
+      // Définit l'indicateur de session
+      idIndicateurSession: props.indicateur.idIndicateurSession, // Récupère l'ID de l'indicateur de session
     },
   };
 
@@ -64,8 +68,8 @@ const submitMesure = () => {
     })
     .then((data) => {
       console.log("Mesure ajoutée :", data);
-      dialog.value = false;
-      newMesure.value = "";
+      dialog.value = false; // Ferme la boîte de dialogue
+      newMesure.value = ""; // Réinitialise la valeur de la mesure
     })
     .catch((err) => {
       console.error(err);

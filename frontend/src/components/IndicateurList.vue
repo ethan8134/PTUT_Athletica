@@ -108,10 +108,12 @@ const selectedIndicateur = ref(null);
 const newMesure = ref({ valeur: "", dateMesure: "" });
 
 const toggleDropdown = () => {
-  showDropdown.value = !showDropdown.value;
+  // Toggle le menu déroulant
+  showDropdown.value = !showDropdown.value; // Ferme le menu si on clique en dehors
 };
 
 const selectType = (type) => {
+  // Selection du type d'indicateur
   selectedType.value = type;
   currentPage.value = 1;
   showDropdown.value = false;
@@ -130,52 +132,60 @@ const selectType = (type) => {
 const allIndicateurs = ref([]);
 
 function getIndicateurs() {
-  fetch("http://localhost:8989/api/indicateurGlobals")
+  // Récupération des indicateurs depuis l'API
+  fetch("http://localhost:8989/api/indicateurGlobals") // Récupération des indicateurs globaux
     .then((res) => res.json())
     .then((dataGlobals) => {
       const globals = dataGlobals.map((ind) => ({
+        // Création d'un tableau d'indicateurs globaux
         id: ind.idIndicateurGlobal,
         nom: ind.nom,
         unite: ind.unite,
         categorie: { nom: "Global" },
         type: "global",
       }));
-      fetch("http://localhost:8989/api/indicateurSessions")
+      fetch("http://localhost:8989/api/indicateurSessions") // Récupération des indicateurs de session
         .then((res) => res.json())
         .then((dataSessions) => {
           const sessions = dataSessions.map((ind) => ({
+            // Création d'un tableau d'indicateurs de session
             id: ind.idIndicateurSession,
             nom: ind.nom,
             unite: ind.unite,
             categorie: ind.categorie || { nom: "Session" },
             type: "session",
           }));
-          allIndicateurs.value = [...globals, ...sessions];
-          filterIndicateurs();
+          allIndicateurs.value = [...globals, ...sessions]; // Fusion des deux tableaux
+          filterIndicateurs(); // Filtrage des indicateurs selon le type sélectionné
         });
     });
 }
 
 function filterIndicateurs() {
+  // Filtrage des indicateurs selon le type sélectionné
   indicateur.value = allIndicateurs.value.filter((ind) =>
     selectedType.value ? ind.type === selectedType.value : true
   );
 }
 
 const totalPages = computed(() =>
+  // Calcul du nombre total de pages
   Math.ceil(indicateur.value.length / itemsPerPage)
 );
 
 const paginatedIndicateurs = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  return indicateur.value.slice(start, start + itemsPerPage);
+  // Pagination des indicateurs
+  const start = (currentPage.value - 1) * itemsPerPage; // Calcul de l'index de départ
+  return indicateur.value.slice(start, start + itemsPerPage); // Récupération des indicateurs pour la page actuelle
 });
 
 function startEdit(ind) {
-  ind.editing = true;
+  // Démarre l'édition d'un indicateur
+  ind.editing = true; // Met l'indicateur en mode édition
 }
 
 function saveEdit(ind) {
+  // Enregistre les modifications d'un indicateur
   const url =
     ind.type === "global"
       ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
@@ -204,14 +214,16 @@ function saveEdit(ind) {
 }
 
 function deleteIndicateur(ind) {
+  // Supprime un indicateur
   const url =
     ind.type === "global"
-      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}`
-      : `http://localhost:8989/api/indicateurSessions/${ind.id}`;
+      ? `http://localhost:8989/api/indicateurGlobals/${ind.id}` // URL pour les indicateurs globaux
+      : `http://localhost:8989/api/indicateurSessions/${ind.id}`; // URL pour les indicateurs de session
 
   fetch(url, { method: "DELETE" }).then((res) => {
     if (!res.ok) throw new Error();
     allIndicateurs.value = allIndicateurs.value.filter(
+      // Filtre les indicateurs
       (i) => i.id !== ind.id || i.type !== ind.type
     );
     filterIndicateurs();
@@ -219,13 +231,16 @@ function deleteIndicateur(ind) {
 }
 
 function ajouterValeur(ind) {
+  // Ajoute une valeur à un indicateur
   selectedIndicateur.value = ind;
   newMesure.value = { valeur: "", dateMesure: "" };
   showPopup.value = true;
 }
 
 function validerMesure() {
+  // Valide la mesure ajoutée
   if (!newMesure.value.valeur || !newMesure.value.dateMesure) {
+    // Vérifie si les champs sont remplis
     alert("Veuillez remplir tous les champs.");
     return;
   }
@@ -253,7 +268,7 @@ function validerMesure() {
     };
   }
 
-  console.log("Sending data:", JSON.stringify(body));
+  console.log("Envoi des données:", JSON.stringify(body));
 
   fetch("http://localhost:8989/api/mesures", {
     method: "POST",
@@ -273,7 +288,7 @@ function validerMesure() {
       showPopup.value = false;
     })
     .catch((err) => {
-      console.error("Detailed error:", err);
+      console.error("Erreur détaillée:", err);
       alert(`Une erreur est survenue: ${err.message}`);
     });
 }

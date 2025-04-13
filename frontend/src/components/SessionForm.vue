@@ -35,7 +35,9 @@ const session = ref({
 const apiSessionUrl = "http://localhost:8989/api/sessions";
 
 const submitForm = () => {
+  // Soumettre le formulaire
   if (!session.value.nom || !session.value.dateSession) {
+    // Vérifier si les champs sont remplis
     alert("Veuillez remplir tous les champs de la session.");
     return;
   }
@@ -64,7 +66,8 @@ const submitForm = () => {
 };
 
 const cancelForm = () => {
-  session.value = { nom: "", dateSession: "", utilisateur: { idPersonne: 1 } };
+  // Fermer le formulaire
+  session.value = { nom: "", dateSession: "", utilisateur: { idPersonne: 1 } }; // Réinitialiser le formulaire
 };
 </script>
 

@@ -47,32 +47,35 @@ const showSessionForm = ref(false);
 const router = useRouter();
 
 const triggerFileSelect = () => {
-  fileInput.value.click();
+  fileInput.value.click(); // Déclenche l'événement de clic sur l'élément input pour ouvrir la boîte de dialogue de sélection de fichier
 };
 
 const handleFileSelect = (event) => {
   if (event.target.files && event.target.files[0]) {
-    selectedFile.value = event.target.files[0];
+    // Vérifie si un fichier a été sélectionné
+    selectedFile.value = event.target.files[0]; // Récupère le fichier sélectionné
     console.log("Fichier sélectionné :", selectedFile.value.name);
   }
 };
 
 const handleDrop = (event) => {
-  const file = event.dataTransfer.files[0];
+  const file = event.dataTransfer.files[0]; // Récupère le fichier déposé
   if (file) {
-    selectedFile.value = file;
+    // Vérifie si un fichier a été déposé
+    selectedFile.value = file; // Définit le fichier sélectionné
     console.log("Fichier déposé :", file.name);
   }
 };
 
 const handleFileUpload = async () => {
   if (!selectedFile.value) {
+    // Vérifie si un fichier a été sélectionné
     alert("Aucun fichier sélectionné.");
     return;
   }
 
   const formData = new FormData();
-  formData.append("file", selectedFile.value);
+  formData.append("file", selectedFile.value); // Ajoute le fichier au FormData
 
   try {
     const response = await fetch("http://localhost:8989/api/import", {
@@ -100,8 +103,8 @@ const returnMesSessions = () => {
 <style scoped>
 .file-upload-page {
   display: flex;
-  align-items: flex-start; /* Aligne les éléments en haut */
-  gap: 20px; /* Espace entre le bouton et le conteneur */
+  align-items: flex-start;
+  gap: 20px;
   padding: 20px;
 }
 
@@ -114,7 +117,7 @@ const returnMesSessions = () => {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  height: fit-content; /* Ajuste la hauteur pour s'aligner avec le conteneur */
+  height: fit-content;
 }
 
 .cancel-btn:hover {
@@ -122,9 +125,9 @@ const returnMesSessions = () => {
 }
 
 .upload-container {
-  flex: 1; /* Prend tout l'espace restant */
+  flex: 1;
   max-width: 500px;
-  margin: 0 auto; /* Centre horizontalement */
+  margin: 0 auto;
   padding: 20px 25px;
   background: #fff;
   border-radius: 8px;

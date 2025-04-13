@@ -108,10 +108,14 @@ const fetchSessions = () => {
 };
 
 const filterSessions = () => {
-  sessions.value = allSessions.value.filter((ses) =>
-    searchTerm.value
-      ? ses.nom.toLowerCase().includes(searchTerm.value.toLowerCase())
-      : true
+  // Filtre les sessions en fonction du terme de recherche
+  sessions.value = allSessions.value.filter(
+    (
+      ses // Filtre les sessions
+    ) =>
+      searchTerm.value // Vérifie si le terme de recherche est présent dans le nom de la session
+        ? ses.nom.toLowerCase().includes(searchTerm.value.toLowerCase())
+        : true
   );
 };
 
@@ -119,6 +123,7 @@ watch(searchTerm, filterSessions);
 onMounted(fetchSessions);
 
 const deleteSession = (id) => {
+  // Supprime une session
   if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette session ?"))
     return;
 
@@ -133,17 +138,20 @@ const deleteSession = (id) => {
 };
 
 const startEdit = (session) => {
-  editingSessionId.value = session.idSession;
-  editedSession.value = { ...session };
+  // Démarre l'édition d'une session
+  editingSessionId.value = session.idSession; // Définit l'ID de la session à éditer
+  editedSession.value = { ...session }; // Crée une copie de la session pour l'édition
 };
 
 const cancelEdit = () => {
-  editingSessionId.value = null;
-  editedSession.value = {};
+  // Annule l'édition
+  editingSessionId.value = null; // Réinitialise l'ID de la session à éditer
+  editedSession.value = {}; // Réinitialise la session éditée
 };
 
 const saveEdit = () => {
-  const id = editingSessionId.value;
+  // Enregistre les modifications
+  const id = editingSessionId.value; // Récupère l'ID de la session à éditer
   fetch(`${apiBaseUrl}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -162,7 +170,8 @@ const saveEdit = () => {
 };
 
 const openAddMesureDialog = (session) => {
-  selectedSession.value = session;
+  // Ouvre la boîte de dialogue pour ajouter une mesure
+  selectedSession.value = session; // Définit la session sélectionnée
   fetch("http://localhost:8989/api/indicateurSessions")
     .then((res) => res.json())
     .then((data) => {
@@ -177,7 +186,7 @@ const submitMesure = () => {
     !newMesure.value.valeur ||
     !newMesure.value.dateMesure
   ) {
-    alert("Tous les champs sont obligatoires.");
+    alert("Veuillez remplir tous les champs.");
     return;
   }
 

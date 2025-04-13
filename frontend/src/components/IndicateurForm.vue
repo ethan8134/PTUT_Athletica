@@ -71,7 +71,7 @@ import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
-const sessionId = route.query.sessionId; //
+const sessionId = route.query.sessionId; // Récupère l'ID de la session depuis les paramètres de la route
 import { onMounted } from "vue";
 
 const selectedIndicateurId = ref(null);
@@ -79,6 +79,7 @@ const mesureExistante = ref({ valeur: "", dateMesure: "" });
 const indicateursExistants = ref([]);
 
 onMounted(() => {
+  // Récupère les indicateurs existants au chargement du composant
   fetch("http://localhost:8989/api/indicateurSessions")
     .then((res) => res.json())
     .then((data) => {
@@ -97,10 +98,11 @@ const ajouterValeurExistante = () => {
   }
 
   const body = {
-    valeur: parseFloat(mesureExistante.value.valeur),
-    dateMesure: mesureExistante.value.dateMesure,
-    indicateurSession: { idIndicateurSession: selectedIndicateurId.value },
-    session: { idSession: parseInt(sessionId) },
+    // Crée le corps de la requête
+    valeur: parseFloat(mesureExistante.value.valeur), // Convertit la valeur en nombre flottant
+    dateMesure: mesureExistante.value.dateMesure, // Récupère la date de la mesure
+    indicateurSession: { idIndicateurSession: selectedIndicateurId.value }, // Définit l'indicateur de session
+    session: { idSession: parseInt(sessionId) }, // Définit la session
   };
 
   fetch("http://localhost:8989/api/mesures", {
@@ -111,7 +113,7 @@ const ajouterValeurExistante = () => {
     .then((res) => {
       if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
       alert("Valeur ajoutée à l’indicateur !");
-      mesureExistante.value = { valeur: "", dateMesure: "" };
+      mesureExistante.value = { valeur: "", dateMesure: "" }; // Réinitialise le formulaire
     })
     .catch((err) => {
       console.error(err);
@@ -126,12 +128,13 @@ const indicateur = ref({
 });
 
 const submitForm = async () => {
+  // Fonction pour soumettre le formulaire
   if (
     !indicateur.value.nom ||
     !indicateur.value.unite ||
     !indicateur.value.categorie
   ) {
-    alert("Remplis bien tous les champs !");
+    alert("Veuillez remplir tous les champs.");
     return;
   }
 
@@ -139,13 +142,13 @@ const submitForm = async () => {
     const bodyIndicateur = {
       nom: indicateur.value.nom,
       unite: indicateur.value.unite,
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toISOString().split("T")[0], // Date actuelle au format ISO
       categorie: { idCategorie: 1 },
       utilisateur: { idPersonne: 1 },
-      session: sessionId ? { idSession: parseInt(sessionId) } : null,
+      session: sessionId ? { idSession: parseInt(sessionId) } : null, // Définit la session si elle existe
     };
 
-    console.log("Sending indicator data:", bodyIndicateur);
+    console.log("Envoi des données de l'indicateur:", bodyIndicateur);
 
     const res = await fetch("http://localhost:8989/api/indicateurSessions", {
       method: "POST",
@@ -154,15 +157,16 @@ const submitForm = async () => {
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Server response:", errorText);
+      // Vérifie si la réponse est correcte
+      const errorText = await res.text(); // Récupère le texte d'erreur
+      console.error("Réponse du serveur:", errorText);
       throw new Error(
-        `Error creating indicator: ${res.status} ${res.statusText}`
+        `Erreur lors de la création de l'indicateur: ${res.status} ${res.statusText}`
       );
     }
 
-    const created = await res.json();
-    console.log("Created indicator:", created);
+    const created = await res.json(); // Récupère l'indicateur créé
+    console.log("Indicateur crée:", created);
 
     if (sessionId) {
       fetch("http://localhost:8989/api/indicateurSessions")
@@ -172,7 +176,7 @@ const submitForm = async () => {
         });
     }
 
-    alert("Indicateur (et mesure si possible) créé !");
+    alert("Indicateur créé !");
     router.push("/");
   } catch (err) {
     console.error("Erreur complète:", err);
@@ -181,7 +185,7 @@ const submitForm = async () => {
 };
 
 const cancelForm = () => {
-  router.push("/MesIndicateurs");
+  router.push("/MesIndicateurs"); // Redirige vers la page des indicateurs
 };
 </script>
 

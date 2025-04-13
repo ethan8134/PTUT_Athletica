@@ -29,12 +29,14 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const indicateur = ref({
+  // Définition de l'indicateur
   nom: "",
   unite: "",
   date: "",
 });
 
 const submitForm = async () => {
+  // Soumettre le formulaire
   if (!indicateur.value.nom || !indicateur.value.unite) {
     alert("Veuillez remplir tous les champs.");
     return;
@@ -63,6 +65,7 @@ const submitForm = async () => {
 };
 
 const cancelForm = () => {
+  // Fermer le formulaire
   router.push("/MesIndicateurs");
 };
 </script>

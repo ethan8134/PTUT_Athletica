@@ -77,8 +77,10 @@ const mesuresParIndicateur = ref({});
 const selectedIndicateurIds = ref([]);
 
 const fetchMesuresForIndicateur = async (ind) => {
+  // Fetch les mesures pour un indicateur
   try {
-    const endpoint =
+    // Vérifie si l'indicateur est déjà présent dans le tableau
+    const endpoint = // Définit l'endpoint en fonction du type d'indicateur
       ind.type === "global"
         ? `http://localhost:8989/api/mesures/indicateur-global/${ind.rawId}`
         : `http://localhost:8989/api/mesures/indicateur-session/${ind.rawId}`;
@@ -86,6 +88,7 @@ const fetchMesuresForIndicateur = async (ind) => {
     const res = await fetch(endpoint);
 
     if (!res.ok) {
+      // Vérifie si la réponse est correcte
       console.error(`Erreur API ${res.status} pour ${ind.nom}`);
       mesuresParIndicateur.value[ind.id] = [];
       return;
@@ -93,6 +96,7 @@ const fetchMesuresForIndicateur = async (ind) => {
 
     const data = await res.json();
     mesuresParIndicateur.value[ind.id] = data.sort(
+      // Trie les mesures par date
       (a, b) => new Date(a.dateMesure) - new Date(b.dateMesure)
     );
   } catch (err) {
@@ -102,12 +106,13 @@ const fetchMesuresForIndicateur = async (ind) => {
 };
 
 const supprimerMesure = async (ind, idMesure) => {
+  // Supprime une mesure
   const confirmDelete = confirm(
     "Souhaites-tu vraiment supprimer cette mesure ? Cette action est irréversible."
   );
   if (!confirmDelete) return;
 
-  const endpoint = `http://localhost:8989/api/mesures/${idMesure}`;
+  const endpoint = `http://localhost:8989/api/mesures/${idMesure}`; // Définit l'endpoint pour la suppression
 
   try {
     const res = await fetch(endpoint, { method: "DELETE" });
@@ -137,6 +142,7 @@ onMounted(async () => {
   ]);
 
   const mappedGlobals = globals.map((ind) => ({
+    // Mappe les indicateurs globaux
     id: `g-${ind.idIndicateurGlobal}`,
     nom: ind.nom + " (Global)",
     type: "global",
@@ -144,6 +150,7 @@ onMounted(async () => {
   }));
 
   const mappedSessions = sessions.map((ind) => ({
+    // Mappe les indicateurs de session
     id: `s-${ind.idIndicateurSession}`,
     nom: ind.nom + " (Session)",
     type: "session",
@@ -151,25 +158,31 @@ onMounted(async () => {
   }));
 
   indicateurs.value = [...mappedGlobals, ...mappedSessions].filter(
+    // Filtre les indicateurs valides
     (ind) => ind.nom && ind.nom.trim() !== ""
   );
 });
 
 watch(selectedIndicateurIds, async (newIds) => {
+  // Vérifie les indicateurs sélectionnés
   for (const id of newIds) {
+    // Parcourt les IDs sélectionnés
     if (!mesuresParIndicateur.value[id]) {
-      const ind = indicateurs.value.find((i) => i.id === id);
-      if (ind) await fetchMesuresForIndicateur(ind);
+      // Vérifie si les mesures existent déjà
+      const ind = indicateurs.value.find((i) => i.id === id); // Trouve l'indicateur correspondant
+      if (ind) await fetchMesuresForIndicateur(ind); // Récupère les mesures
     }
   }
 });
 
 const indicateursSelectionnes = computed(() =>
+  // Filtre les indicateurs sélectionnés
   indicateurs.value.filter((i) => selectedIndicateurIds.value.includes(i.id))
 );
 
 const getChartConfig = (ind) => {
-  const mesures = mesuresParIndicateur.value[ind.id] || [];
+  // Récupère la configuration du graphique
+  const mesures = mesuresParIndicateur.value[ind.id] || []; // Récupère les mesures pour l'indicateur
 
   return {
     series: [
