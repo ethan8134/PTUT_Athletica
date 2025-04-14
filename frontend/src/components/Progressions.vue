@@ -32,36 +32,45 @@
             :series="getChartConfig(ind).series"
           />
 
-          <v-sheet
-            class="mt-4 pa-3 rounded-lg"
-            color="grey-lighten-3"
+          <v-expansion-panels
+            class="mt-4"
+            variant="accordion"
             v-if="(mesuresParIndicateur[ind.id] || []).length"
           >
-            <h4 class="text-subtitle-1 mb-3">📍 Mesures :</h4>
-            <v-list density="comfortable" class="bg-transparent">
-              <v-list-item
-                v-for="m in mesuresParIndicateur[ind.id]"
-                :key="m.id"
-                class="px-2 d-flex justify-space-between align-center rounded-lg mb-2 hoverable"
-              >
-                <div class="d-flex align-center gap-3">
-                  <span class="font-weight-medium">
-                    📅
-                    {{ new Date(m.dateMesure).toLocaleDateString("fr-FR") }} -
-                    🔢 Valeur : <strong>{{ m.valeur }}</strong>
-                  </span>
-                </div>
-                <v-btn
-                  icon
-                  color="red"
-                  variant="text"
-                  @click="supprimerMesure(ind, m.id)"
-                >
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
-              </v-list-item>
-            </v-list>
-          </v-sheet>
+            <v-expansion-panel>
+              <v-expansion-panel-title class="font-weight-bold">
+                📍 Mesures ({{ mesuresParIndicateur[ind.id].length }})
+              </v-expansion-panel-title>
+
+              <v-expansion-panel-text>
+                <v-list density="comfortable" class="bg-transparent">
+                  <v-list-item
+                    v-for="m in mesuresParIndicateur[ind.id]"
+                    :key="m.id"
+                    class="px-2 d-flex justify-space-between align-center rounded-lg mb-2 hoverable"
+                  >
+                    <div class="d-flex align-center gap-3">
+                      <span class="font-weight-medium">
+                        📅
+                        {{
+                          new Date(m.dateMesure).toLocaleDateString("fr-FR")
+                        }}
+                        - 🔢 Valeur : <strong>{{ m.valeur }}</strong>
+                      </span>
+                    </div>
+                    <v-btn
+                      icon
+                      color="red"
+                      variant="text"
+                      @click="supprimerMesure(ind, m.id)"
+                    >
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </v-list-item>
+                </v-list>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </v-card>
       </v-col>
     </v-row>
@@ -181,8 +190,7 @@ const indicateursSelectionnes = computed(() =>
 );
 
 const getChartConfig = (ind) => {
-  // Récupère la configuration du graphique
-  const mesures = mesuresParIndicateur.value[ind.id] || []; // Récupère les mesures pour l'indicateur
+  const mesures = mesuresParIndicateur.value[ind.id] || [];
 
   return {
     series: [
@@ -201,12 +209,11 @@ const getChartConfig = (ind) => {
     ],
     options: {
       chart: {
-        type: "line",
+        type: "line", // On garde "line" pour que les points restent bien positionnés
         toolbar: { show: false },
       },
       stroke: {
-        curve: "smooth",
-        width: 2,
+        show: false, // ❌ PAS de ligne entre les points
       },
       markers: {
         size: 6,
