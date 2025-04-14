@@ -23,7 +23,7 @@
             <td><input v-model="editedSession.nom" /></td>
             <td><input type="date" v-model="editedSession.date" /></td>
             <td class="action-buttons">
-              <button @click="saveEdit">💾 Enregistrer</button>
+              <button @click="saveEdit">📎 Enregistrer</button>
               <button @click="cancelEdit">Annuler</button>
             </td>
           </template>
@@ -43,7 +43,6 @@
       </table>
     </div>
 
-    <!-- Dialogue des détails de session -->
     <v-dialog v-model="showDetails" max-width="800px">
       <v-card>
         <v-card-title>
@@ -82,20 +81,15 @@
             <p>Aucune mesure associée à cette session</p>
           </div>
 
-          <v-btn color="primary" class="mt-4" @click="showAddMesureDialog = true">
-            Ajouter une mesure
-          </v-btn>
+          <v-btn color="primary" class="mt-4" @click="prepareAddMesure">Ajouter une mesure</v-btn>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="showDetails = false">
-            Fermer
-          </v-btn>
+          <v-btn color="blue darken-1" text @click="showDetails = false">Fermer</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- Dialogue pour ajouter une mesure -->
     <v-dialog v-model="showAddMesureDialog" max-width="500px">
       <v-card>
         <v-card-title>Ajouter une mesure</v-card-title>
@@ -116,12 +110,10 @@
             required
           ></v-text-field>
 
-          <v-text-field
-            v-model="newMesure.dateMesure"
-            label="Date"
-            type="date"
-            required
-          ></v-text-field>
+          <div class="mt-3 text-caption text-grey">
+            🗓️ La mesure sera enregistrée pour la date :
+            <strong>{{ formatDate(newMesure.dateMesure) }}</strong>
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -134,17 +126,14 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, watch, onMounted } from 'vue';
 
-const router = useRouter();
-const searchTerm = ref("");
+const searchTerm = ref('');
 const sessions = ref([]);
 const allSessions = ref([]);
 const editingSessionId = ref(null);
 const editedSession = ref({});
 
-// Variables pour le dialogue de détails
 const showDetails = ref(false);
 const selectedSession = ref(null);
 const sessionMesures = ref([]);
@@ -153,30 +142,23 @@ const showAddMesureDialog = ref(false);
 const newMesure = ref({
   indicateurId: null,
   valeur: '',
-  dateMesure: new Date().toISOString().split('T')[0]
+  dateMesure: ''
 });
 
-const apiBaseUrl = "http://localhost:8989/api/sessions";
+const apiBaseUrl = 'http://localhost:8989/api/sessions';
 
 const fetchSessions = () => {
   fetch(apiBaseUrl)
-    .then((response) => response.json())
-    .then((data) => {
+    .then(res => res.json())
+    .then(data => {
       allSessions.value = data;
       filterSessions();
-    })
-    .catch((error) => {
-      console.error("Erreur lors de la récupération des sessions:", error);
     });
 };
 
 const filterSessions = () => {
-  // Filtre les sessions en fonction du terme de recherche
-  sessions.value = allSessions.value.filter(
-    (ses) =>
-      searchTerm.value
-        ? ses.nom.toLowerCase().includes(searchTerm.value.toLowerCase())
-        : true
+  sessions.value = allSessions.value.filter(ses =>
+    searchTerm.value ? ses.nom.toLowerCase().includes(searchTerm.value.toLowerCase()) : true
   );
 };
 
@@ -184,177 +166,109 @@ watch(searchTerm, filterSessions);
 onMounted(fetchSessions);
 
 const deleteSession = (id) => {
-  // Supprime une session
-  if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette session ?"))
-    return;
-
-  fetch(`${apiBaseUrl}/${id}`, { method: "DELETE" })
-    .then((response) => {
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
-      fetchSessions();
-    })
-    .catch((error) => {
-      console.error("Erreur lors de la suppression:", error);
-    });
+  if (!confirm("Supprimer cette session ?")) return;
+  fetch(`${apiBaseUrl}/${id}`, { method: 'DELETE' })
+    .then(res => res.ok && fetchSessions());
 };
 
 const startEdit = (session) => {
-  // Démarre l'édition d'une session
   editingSessionId.value = session.idSession;
   editedSession.value = { ...session };
 };
 
 const cancelEdit = () => {
-  // Annule l'édition
   editingSessionId.value = null;
   editedSession.value = {};
 };
 
 const saveEdit = () => {
-  // Enregistre les modifications
-  const id = editingSessionId.value;
-  fetch(`${apiBaseUrl}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(editedSession.value),
+  fetch(`${apiBaseUrl}/${editingSessionId.value}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(editedSession.value)
   })
-    .then((res) => {
-      if (!res.ok) throw new Error("Erreur lors de la mise à jour");
-      alert("Session mise à jour !");
-      cancelEdit();
-      fetchSessions();
-    })
-    .catch((err) => {
-      console.error(err);
-      alert("Erreur lors de la mise à jour.");
-    });
+    .then(res => res.ok && fetchSessions());
+  cancelEdit();
 };
 
 const viewSessionDetails = async (sessionId) => {
-  try {
-    // Charger les détails de la session
-    const sessionRes = await fetch(`http://localhost:8989/api/sessions/${sessionId}`);
-    selectedSession.value = await sessionRes.json();
+  const res = await fetch(`${apiBaseUrl}/${sessionId}`);
+  selectedSession.value = await res.json();
 
-    // Charger les indicateurs disponibles
-    const indicateursRes = await fetch('http://localhost:8989/api/indicateurSessions');
-    indicateurs.value = await indicateursRes.json();
+  const indicateursRes = await fetch('http://localhost:8989/api/indicateurSessions');
+  indicateurs.value = await indicateursRes.json();
 
-    // Charger les mesures liées à cette session
-    await loadSessionMesures(sessionId);
-
-    // Afficher la boîte de dialogue
-    showDetails.value = true;
-  } catch (error) {
-    console.error('Erreur lors du chargement des données:', error);
-    alert('Erreur lors du chargement des détails de la session');
-  }
+  await loadSessionMesures(sessionId);
+  showDetails.value = true;
 };
 
 const loadSessionMesures = async (sessionId) => {
-  try {
-    const mesuresRes = await fetch('http://localhost:8989/api/mesures');
-    const allMesures = await mesuresRes.json();
+  const mesuresRes = await fetch('http://localhost:8989/api/mesures');
+  const allMesures = await mesuresRes.json();
 
-    sessionMesures.value = allMesures
-      .filter(m => m.session && m.session.idSession == sessionId)
-      .map(m => {
-        const indicateurId = m.indicateurSession?.idIndicateurSession;
-        const indicateurComplet = indicateurs.value.find(i => i.idIndicateurSession === indicateurId);
-        return {
-          id: m.id,
-          indicateurNom: indicateurComplet?.nom || 'Inconnu',
-          valeur: m.valeur,
-          unite: indicateurComplet?.unite || '',
-          dateMesure: m.dateMesure,
-          indicateurId: indicateurId
-        };
-      });
-  } catch (error) {
-    console.error('Erreur lors du chargement des mesures:', error);
-    sessionMesures.value = [];
-  }
+  sessionMesures.value = allMesures.filter(m => m.session?.idSession == sessionId).map(m => {
+    const indicateur = indicateurs.value.find(i => i.idIndicateurSession === m.indicateurSession?.idIndicateurSession);
+    return {
+      id: m.id,
+      indicateurNom: indicateur?.nom || 'Inconnu',
+      valeur: m.valeur,
+      unite: indicateur?.unite || '',
+      dateMesure: m.dateMesure,
+      indicateurId: m.indicateurSession?.idIndicateurSession
+    };
+  });
 };
 
+const prepareAddMesure = () => {
+  if (selectedSession.value?.dateSession) {
+    newMesure.value.dateMesure = selectedSession.value.dateSession;
+  }
+  showAddMesureDialog.value = true;
+};
 
 const addMesure = async () => {
-  if (!newMesure.value.indicateurId || !newMesure.value.valeur || !newMesure.value.dateMesure) {
+  if (!newMesure.value.indicateurId || !newMesure.value.valeur) {
     alert('Veuillez remplir tous les champs.');
     return;
   }
 
-  try {
-    const body = {
-      valeur: parseFloat(newMesure.value.valeur),
-      dateMesure: newMesure.value.dateMesure,
-      indicateurSession: {
-        idIndicateurSession: newMesure.value.indicateurId
-      },
-      session: {
-        idSession: selectedSession.value.idSession
-      }
-    };
-
-    const response = await fetch('http://localhost:8989/api/mesures', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'ajout de la mesure');
+  const body = {
+    valeur: parseFloat(newMesure.value.valeur),
+    dateMesure: newMesure.value.dateMesure,
+    indicateurSession: {
+      idIndicateurSession: newMesure.value.indicateurId
+    },
+    session: {
+      idSession: selectedSession.value.idSession
     }
+  };
 
+  const res = await fetch('http://localhost:8989/api/mesures', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (res.ok) {
     await loadSessionMesures(selectedSession.value.idSession);
     showAddMesureDialog.value = false;
-    newMesure.value = {
-      indicateurId: null,
-      valeur: '',
-      dateMesure: new Date().toISOString().split('T')[0]
-    };
+    newMesure.value = { indicateurId: null, valeur: '', dateMesure: '' };
     alert('Mesure ajoutée avec succès!');
-  } catch (error) {
-    console.error('Erreur:', error);
-    alert('Une erreur est survenue lors de l\'ajout de la mesure.');
   }
 };
 
-const deleteMesure = async (mesureId) => {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer cette mesure?')) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:8989/api/mesures/${mesureId}`, {
-      method: 'DELETE'
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la suppression');
-    }
-
-    await loadSessionMesures(selectedSession.value.idSession);
-    alert('Mesure supprimée avec succès!');
-  } catch (error) {
-    console.error('Erreur:', error);
-    alert('Une erreur est survenue lors de la suppression.');
-  }
+const deleteMesure = async (id) => {
+  if (!confirm('Supprimer cette mesure ?')) return;
+  const res = await fetch(`http://localhost:8989/api/mesures/${id}`, { method: 'DELETE' });
+  if (res.ok) await loadSessionMesures(selectedSession.value.idSession);
 };
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'Non spécifiée';
-
-  const date = new Date(dateString);
-  return date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
+const formatDate = (dateStr) => {
+  if (!dateStr) return 'Non spécifiée';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 </script>
-
 <style scoped>
 .list-container {
   border: solid 2px gray;
@@ -485,6 +399,18 @@ tr:nth-child(even) {
 .text-center.my-4 p {
   color: #777;
   font-style: italic;
+}
+.text-caption {
+  font-size: 14px;
+}
+.text-grey {
+  color: #666;
+}
+.text-caption {
+  font-size: 14px;
+}
+.text-grey {
+  color: #666;
 }
 
 </style>

@@ -32,6 +32,7 @@
         </button>
       </div>
     </form>
+
     <div v-if="sessionId">
       <hr style="margin-top: 30px; margin-bottom: 20px" />
 
@@ -52,34 +53,30 @@
         type="number"
       />
 
-      <v-text-field
-        label="Date"
-        v-model="mesureExistante.dateMesure"
-        type="date"
-      />
+      <div class="mt-3 text-caption text-grey">
+        📅 La mesure sera enregistrée pour la date de la session sélectionnée.
+      </div>
 
-      <v-btn color="green" @click="ajouterValeurExistante"
-        >Ajouter la valeur</v-btn
-      >
+      <v-btn color="green" @click="ajouterValeurExistante">
+        Ajouter la valeur
+      </v-btn>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
-const sessionId = route.query.sessionId; // Récupère l'ID de la session depuis les paramètres de la route
-import { onMounted } from "vue";
+const sessionId = route.query.sessionId;
 
 const selectedIndicateurId = ref(null);
-const mesureExistante = ref({ valeur: "", dateMesure: "" });
+const mesureExistante = ref({ valeur: "" });
 const indicateursExistants = ref([]);
 
 onMounted(() => {
-  // Récupère les indicateurs existants au chargement du composant
   fetch("http://localhost:8989/api/indicateurSessions")
     .then((res) => res.json())
     .then((data) => {
@@ -88,21 +85,18 @@ onMounted(() => {
 });
 
 const ajouterValeurExistante = () => {
-  if (
-    !selectedIndicateurId.value ||
-    !mesureExistante.value.valeur ||
-    !mesureExistante.value.dateMesure
-  ) {
+  if (!selectedIndicateurId.value || !mesureExistante.value.valeur) {
     alert("Veuillez remplir tous les champs.");
     return;
   }
 
+  const dateFromSession = new Date().toISOString().split("T")[0];
+
   const body = {
-    // Crée le corps de la requête
-    valeur: parseFloat(mesureExistante.value.valeur), // Convertit la valeur en nombre flottant
-    dateMesure: mesureExistante.value.dateMesure, // Récupère la date de la mesure
-    indicateurSession: { idIndicateurSession: selectedIndicateurId.value }, // Définit l'indicateur de session
-    session: { idSession: parseInt(sessionId) }, // Définit la session
+    valeur: parseFloat(mesureExistante.value.valeur),
+    dateMesure: dateFromSession,
+    indicateurSession: { idIndicateurSession: selectedIndicateurId.value },
+    session: { idSession: parseInt(sessionId) },
   };
 
   fetch("http://localhost:8989/api/mesures", {
@@ -113,7 +107,7 @@ const ajouterValeurExistante = () => {
     .then((res) => {
       if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
       alert("Valeur ajoutée à l’indicateur !");
-      mesureExistante.value = { valeur: "", dateMesure: "" }; // Réinitialise le formulaire
+      mesureExistante.value = { valeur: "" };
     })
     .catch((err) => {
       console.error(err);
@@ -128,12 +122,7 @@ const indicateur = ref({
 });
 
 const submitForm = async () => {
-  // Fonction pour soumettre le formulaire
-  if (
-    !indicateur.value.nom ||
-    !indicateur.value.unite ||
-    !indicateur.value.categorie
-  ) {
+  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.categorie) {
     alert("Veuillez remplir tous les champs.");
     return;
   }
@@ -142,13 +131,11 @@ const submitForm = async () => {
     const bodyIndicateur = {
       nom: indicateur.value.nom,
       unite: indicateur.value.unite,
-      date: new Date().toISOString().split("T")[0], // Date actuelle au format ISO
+      date: new Date().toISOString().split("T")[0],
       categorie: { idCategorie: 1 },
       utilisateur: { idPersonne: 1 },
-      session: sessionId ? { idSession: parseInt(sessionId) } : null, // Définit la session si elle existe
+      session: sessionId ? { idSession: parseInt(sessionId) } : null,
     };
-
-    console.log("Envoi des données de l'indicateur:", bodyIndicateur);
 
     const res = await fetch("http://localhost:8989/api/indicateurSessions", {
       method: "POST",
@@ -157,16 +144,11 @@ const submitForm = async () => {
     });
 
     if (!res.ok) {
-      // Vérifie si la réponse est correcte
-      const errorText = await res.text(); // Récupère le texte d'erreur
-      console.error("Réponse du serveur:", errorText);
-      throw new Error(
-        `Erreur lors de la création de l'indicateur: ${res.status} ${res.statusText}`
-      );
+      const errorText = await res.text();
+      throw new Error(`Erreur lors de la création de l'indicateur: ${res.status} ${res.statusText}\n${errorText}`);
     }
 
-    const created = await res.json(); // Récupère l'indicateur créé
-    console.log("Indicateur crée:", created);
+    await res.json();
 
     if (sessionId) {
       fetch("http://localhost:8989/api/indicateurSessions")
@@ -179,13 +161,13 @@ const submitForm = async () => {
     alert("Indicateur créé !");
     router.push("/");
   } catch (err) {
-    console.error("Erreur complète:", err);
+    console.error("Erreur:", err);
     alert(`Une erreur s'est produite: ${err.message}`);
   }
 };
 
 const cancelForm = () => {
-  router.push("/MesIndicateurs"); // Redirige vers la page des indicateurs
+  router.push("/MesIndicateurs");
 };
 </script>
 
@@ -219,7 +201,6 @@ const cancelForm = () => {
   padding: 10px;
   border: none;
 }
-
 input {
   border: 1px solid black;
   border-radius: 4px;
@@ -228,7 +209,6 @@ input {
   width: 100%;
   box-sizing: border-box;
 }
-
 input:focus {
   border-color: #007bff;
   outline: none;

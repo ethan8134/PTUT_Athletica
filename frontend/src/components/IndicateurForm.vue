@@ -1,14 +1,10 @@
 <template>
   <div class="indicateur-form-container">
-    <h2>✍️ Ajouter un indicateur</h2>
+    <h2>✨ Ajouter un indicateur</h2>
     <form @submit.prevent="submitForm">
       <div class="form-group">
         <label>Nom de l'indicateur</label>
-        <input
-          v-model="indicateur.nom"
-          placeholder="Ex: Rythme Cardiaque"
-          required
-        />
+        <input v-model="indicateur.nom" placeholder="Ex: Rythme Cardiaque" required />
       </div>
 
       <div class="form-group">
@@ -18,174 +14,167 @@
 
       <div class="form-group">
         <label>Catégorie</label>
-        <input
-          v-model="indicateur.categorie"
-          placeholder="Ex: Indicateur de santé"
-          required
-        />
+        <input v-model="indicateur.categorie" placeholder="Ex: Indicateur de santé" required />
       </div>
 
       <div class="form-buttons">
         <button class="add-btn" type="submit">Valider</button>
-        <button class="cancel-btn" type="button" @click="cancelForm">
-          Annuler
+        <button class="cancel-btn" type="button" @click="cancelForm">Annuler</button>
+        <button class="associate-btn" type="button" @click="showAssocierDialog = true">
+          Associer à une session
         </button>
       </div>
     </form>
-    <div v-if="sessionId">
-      <hr style="margin-top: 30px; margin-bottom: 20px" />
 
-      <h3>Ajouter une mesure à un indicateur existant</h3>
+    <!-- POPUP -->
+    <v-dialog v-model="showAssocierDialog" max-width="500px">
+      <v-card>
+        <v-card-title>Associer à une session</v-card-title>
+        <v-card-text>
+          <v-select
+            label="Session"
+            :items="sessions"
+            item-title="nom"
+            item-value="idSession"
+            v-model="selectedSessionId"
+            required
+          />
 
-      <v-select
-        label="Indicateur existant"
-        :items="indicateursExistants"
-        item-title="nom"
-        item-value="idIndicateurSession"
-        v-model="selectedIndicateurId"
-        required
-      />
+          <v-text-field
+            label="Valeur"
+            v-model="mesureExistante.valeur"
+            type="number"
+            required
+          />
 
-      <v-text-field
-        label="Valeur"
-        v-model="mesureExistante.valeur"
-        type="number"
-      />
-
-      <v-text-field
-        label="Date"
-        v-model="mesureExistante.dateMesure"
-        type="date"
-      />
-
-      <v-btn color="green" @click="ajouterValeurExistante"
-        >Ajouter la valeur</v-btn
-      >
-    </div>
+          <p class="text-caption mt-2">
+            📅 La date de la session sera automatiquement utilisée.
+          </p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="showAssocierDialog = false">Fermer</v-btn>
+          <v-btn color="green" @click="ajouterIndicateurEtMesure">Ajouter la valeur</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
-const route = useRoute();
 const router = useRouter();
-const sessionId = route.query.sessionId; // Récupère l'ID de la session depuis les paramètres de la route
-import { onMounted } from "vue";
+const showAssocierDialog = ref(false);
+const selectedSessionId = ref(null);
+const mesureExistante = ref({ valeur: '' });
+const sessions = ref([]);
 
-const selectedIndicateurId = ref(null);
-const mesureExistante = ref({ valeur: "", dateMesure: "" });
-const indicateursExistants = ref([]);
+const indicateur = ref({ nom: '', unite: '', categorie: '' });
 
 onMounted(() => {
-  // Récupère les indicateurs existants au chargement du composant
-  fetch("http://localhost:8989/api/indicateurSessions")
-    .then((res) => res.json())
-    .then((data) => {
-      indicateursExistants.value = data;
-    });
+  fetch('http://localhost:8989/api/sessions')
+    .then(res => res.json())
+    .then(data => sessions.value = data);
 });
 
-const ajouterValeurExistante = () => {
-  if (
-    !selectedIndicateurId.value ||
-    !mesureExistante.value.valeur ||
-    !mesureExistante.value.dateMesure
-  ) {
-    alert("Veuillez remplir tous les champs.");
+const submitForm = async () => {
+  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.categorie) {
+    alert('Veuillez remplir tous les champs.');
     return;
   }
 
   const body = {
-    // Crée le corps de la requête
-    valeur: parseFloat(mesureExistante.value.valeur), // Convertit la valeur en nombre flottant
-    dateMesure: mesureExistante.value.dateMesure, // Récupère la date de la mesure
-    indicateurSession: { idIndicateurSession: selectedIndicateurId.value }, // Définit l'indicateur de session
-    session: { idSession: parseInt(sessionId) }, // Définit la session
+    nom: indicateur.value.nom,
+    unite: indicateur.value.unite,
+    date: new Date().toISOString().split('T')[0],
+    categorie: { idCategorie: 1 },
+    utilisateur: { idPersonne: 1 }
   };
 
-  fetch("http://localhost:8989/api/mesures", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error("Erreur lors de l'ajout de la mesure");
-      alert("Valeur ajoutée à l’indicateur !");
-      mesureExistante.value = { valeur: "", dateMesure: "" }; // Réinitialise le formulaire
-    })
-    .catch((err) => {
-      console.error(err);
-      alert("Une erreur est survenue : " + err.message);
-    });
-};
+  const res = await fetch('http://localhost:8989/api/indicateurSessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
 
-const indicateur = ref({
-  nom: "",
-  unite: "",
-  categorie: "",
-});
-
-const submitForm = async () => {
-  // Fonction pour soumettre le formulaire
-  if (
-    !indicateur.value.nom ||
-    !indicateur.value.unite ||
-    !indicateur.value.categorie
-  ) {
-    alert("Veuillez remplir tous les champs.");
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error(errorText);
+    alert("Erreur lors de la création de l'indicateur");
     return;
   }
 
-  try {
-    const bodyIndicateur = {
-      nom: indicateur.value.nom,
-      unite: indicateur.value.unite,
-      date: new Date().toISOString().split("T")[0], // Date actuelle au format ISO
-      categorie: { idCategorie: 1 },
-      utilisateur: { idPersonne: 1 },
-      session: sessionId ? { idSession: parseInt(sessionId) } : null, // Définit la session si elle existe
-    };
-
-    console.log("Envoi des données de l'indicateur:", bodyIndicateur);
-
-    const res = await fetch("http://localhost:8989/api/indicateurSessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyIndicateur),
-    });
-
-    if (!res.ok) {
-      // Vérifie si la réponse est correcte
-      const errorText = await res.text(); // Récupère le texte d'erreur
-      console.error("Réponse du serveur:", errorText);
-      throw new Error(
-        `Erreur lors de la création de l'indicateur: ${res.status} ${res.statusText}`
-      );
-    }
-
-    const created = await res.json(); // Récupère l'indicateur créé
-    console.log("Indicateur crée:", created);
-
-    if (sessionId) {
-      fetch("http://localhost:8989/api/indicateurSessions")
-        .then((res) => res.json())
-        .then((data) => {
-          indicateursExistants.value = data;
-        });
-    }
-
-    alert("Indicateur créé !");
-    router.push("/");
-  } catch (err) {
-    console.error("Erreur complète:", err);
-    alert(`Une erreur s'est produite: ${err.message}`);
-  }
+  alert('Indicateur créé avec succès !');
+  router.push('/MesIndicateurs');
 };
 
 const cancelForm = () => {
-  router.push("/MesIndicateurs"); // Redirige vers la page des indicateurs
+  router.push('/MesIndicateurs');
+};
+
+const ajouterIndicateurEtMesure = async () => {
+  if (!selectedSessionId.value || !mesureExistante.value.valeur) {
+    alert('Veuillez remplir tous les champs.');
+    return;
+  }
+
+  const selectedSession = sessions.value.find(s => s.idSession === selectedSessionId.value);
+  if (!selectedSession) {
+    alert('Session introuvable.');
+    return;
+  }
+
+  // Créer l’indicateur
+  const indicateurBody = {
+    nom: indicateur.value.nom,
+    unite: indicateur.value.unite,
+    date: selectedSession.dateSession,
+    categorie: { idCategorie: 1 },
+    utilisateur: { idPersonne: 1 }
+  };
+
+  try {
+    const resIndicateur = await fetch('http://localhost:8989/api/indicateurSessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(indicateurBody)
+    });
+
+    if (!resIndicateur.ok) {
+      const msg = await resIndicateur.text();
+      throw new Error(msg);
+    }
+
+    const indicateurCree = await resIndicateur.json();
+
+    // Ajouter la mesure liée
+    const mesureBody = {
+      valeur: parseFloat(mesureExistante.value.valeur),
+      dateMesure: selectedSession.dateSession,
+      indicateurSession: { idIndicateurSession: indicateurCree.idIndicateurSession },
+      session: { idSession: selectedSessionId.value }
+    };
+
+    const resMesure = await fetch('http://localhost:8989/api/mesures', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mesureBody)
+    });
+
+    if (!resMesure.ok) {
+      const err = await resMesure.text();
+      throw new Error(err);
+    }
+
+    alert('Indicateur et mesure ajoutés avec succès !');
+    showAssocierDialog.value = false;
+    mesureExistante.value = { valeur: '' };
+  } catch (err) {
+    console.error(err);
+    alert("Erreur lors de l’ajout : " + err.message);
+  }
 };
 </script>
 
@@ -206,6 +195,7 @@ const cancelForm = () => {
   display: flex;
   gap: 10px;
   justify-content: space-between;
+  margin-top: 20px;
 }
 .add-btn {
   background-color: #28a745;
@@ -219,7 +209,12 @@ const cancelForm = () => {
   padding: 10px;
   border: none;
 }
-
+.associate-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px;
+  border: none;
+}
 input {
   border: 1px solid black;
   border-radius: 4px;
@@ -228,10 +223,13 @@ input {
   width: 100%;
   box-sizing: border-box;
 }
-
 input:focus {
   border-color: #007bff;
   outline: none;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+.text-caption {
+  color: #555;
+  font-size: 0.9rem;
 }
 </style>
