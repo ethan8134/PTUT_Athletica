@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row align="center">
-      <v-col cols="auto">
+      <v-col cols="auto" class="button-container">
         <v-btn
           color="primary"
           dark
@@ -33,8 +33,25 @@ const returnMesSessions = () => {
 </script>
 
 <style scoped>
+.button-container {
+  display: flex;
+  align-items: flex-start;
+  margin-top: -20px;
+}
+
 .cancel-btn {
+  background-color: #0e0c70;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
   height: fit-content;
-  margin-right: 20px;
+}
+
+.cancel-btn:hover {
+  background-color: #0c085a;
 }
 </style>

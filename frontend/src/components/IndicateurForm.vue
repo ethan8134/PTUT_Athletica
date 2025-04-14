@@ -26,7 +26,7 @@
       </div>
 
       <div class="form-buttons">
-        <button class="add-btn" type="submit">✅ Valider</button>
+        <button class="add-btn" type="submit">Valider</button>
         <button class="cancel-btn" type="button" @click="cancelForm">
           Annuler
         </button>

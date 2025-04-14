@@ -52,9 +52,7 @@
                     <div class="d-flex align-center gap-3">
                       <span class="font-weight-medium">
                         📅
-                        {{
-                          new Date(m.dateMesure).toLocaleDateString("fr-FR")
-                        }}
+                        {{ new Date(m.dateMesure).toLocaleDateString("fr-FR") }}
                         - 🔢 Valeur : <strong>{{ m.valeur }}</strong>
                       </span>
                     </div>
@@ -209,11 +207,11 @@ const getChartConfig = (ind) => {
     ],
     options: {
       chart: {
-        type: "line", // On garde "line" pour que les points restent bien positionnés
+        type: "line",
         toolbar: { show: false },
       },
       stroke: {
-        show: false, // ❌ PAS de ligne entre les points
+        show: false,
       },
       markers: {
         size: 6,

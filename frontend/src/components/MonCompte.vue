@@ -52,8 +52,8 @@ import { ref } from "vue";
 
 const userData = ref({
   pseudo: "A renseigner",
-  email: "exemple@exemple.com",
-  mdp: "motdepasse",
+  email: "test@user.com",
+  mdp: "password",
   preferences: "A renseigner",
 });
 

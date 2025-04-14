@@ -40,7 +40,7 @@
         </template>
         <v-app-bar-title>Athletica</v-app-bar-title>
         <v-btn to="/PageAide">Aide</v-btn>
-        <v-btn color="error" outlined @click="logout">Déconnexion</v-btn>
+        <v-btn color="#ffffff" outlined @click="logout">Déconnexion</v-btn>
       </v-app-bar>
       <v-navigation-drawer app v-model="drawer">
         <v-divider></v-divider>
@@ -96,7 +96,7 @@ function startLogoutTimer() {
   clearTimeout(logoutTimer); // Réinitialise le timer s'il existe déjà
   logoutTimer = setTimeout(() => {
     logout(); // Déconnecte l'utilisateur après 60 secondes d'inactivité
-  }, 60000); // 60 secondes
+  }, 120000); // 60 secondes
 }
 
 // Fonction pour arrêter le timer de déconnexion

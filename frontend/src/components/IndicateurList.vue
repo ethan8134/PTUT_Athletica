@@ -49,6 +49,13 @@
                 >
                   ➕ Ajouter valeur
                 </button>
+                <button
+                  v-if="ind.type === 'session'"
+                  @click="redirectToProgressions(ind)"
+                  class="progression-btn"
+                >
+                  📊 Voir Progressions
+                </button>
               </td>
             </template>
           </tr>
@@ -96,6 +103,8 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 
+const router = useRouter();
+
 const indicateur = ref([]);
 const showDropdown = ref(false);
 const selectedType = ref("");
@@ -106,6 +115,14 @@ const itemsPerPage = 5;
 const showPopup = ref(false);
 const selectedIndicateur = ref(null);
 const newMesure = ref({ valeur: "", dateMesure: "" });
+
+// Fonction pour rediriger vers la page "MesProgressions" avec l'indicateur pré-sélectionné
+function redirectToProgressions(ind) {
+  router.push({
+    path: "/MesProgressions",
+    query: { indicateurId: ind.id, indicateurNom: ind.nom },
+  });
+}
 
 const toggleDropdown = () => {
   // Toggle le menu déroulant
