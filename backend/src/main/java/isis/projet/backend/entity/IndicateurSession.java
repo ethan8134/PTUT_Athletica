@@ -28,7 +28,7 @@ public class IndicateurSession {
     private Utilisateur utilisateur;
 
     @OneToMany(mappedBy = "indicateurSession", cascade = CascadeType.ALL)
-    @JsonManagedReference // 👈 Ici on garde la relation
+    @JsonManagedReference
     private List<Mesure> mesures;
 }
 

@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
-@CrossOrigin(origins = "http://localhost:3002") // IMPORTANT : ton frontend tourne sur le port 3000
+@CrossOrigin(origins = "http://localhost:3002")
 @RestController
 @RequestMapping("/api/sessions")
 @Slf4j
@@ -18,7 +18,6 @@ public class SessionController {
         this.sessionService = sessionService;
     }
 
-    // GET : Récupérer toutes les sessions
     @GetMapping
     public ResponseEntity<List<Session>> getAllSessions() {
         log.info("Récupération de toutes les sessions");
@@ -26,7 +25,6 @@ public class SessionController {
         return ResponseEntity.ok(sessions);
     }
 
-    // GET : Récupérer une session par son ID
     @GetMapping("/{id}")
     public ResponseEntity<Session> getSessionById(@PathVariable Integer id) {
         log.info("Récupération de la session avec l'id : {}", id);
@@ -35,7 +33,6 @@ public class SessionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST : Créer une nouvelle session
     @PostMapping
     public ResponseEntity<Session> createSession(@RequestBody Session session) {
         log.info("Création d'une nouvelle session");
@@ -43,7 +40,6 @@ public class SessionController {
         return ResponseEntity.ok(created);
     }
 
-    // PUT : Mettre à jour une session existante
     @PutMapping("/{id}")
     public ResponseEntity<Session> updateSession(@PathVariable Integer id, @RequestBody Session session) {
         log.info("Mise à jour de la session avec l'id : {}", id);
@@ -55,7 +51,6 @@ public class SessionController {
         }
     }
 
-    // DELETE : Supprimer une session par son ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSession(@PathVariable Integer id) {
         log.info("Suppression de la session avec l'id : {}", id);

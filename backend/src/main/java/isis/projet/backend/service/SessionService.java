@@ -44,7 +44,6 @@ public class SessionService {
 
     public boolean deleteSession(Integer id) {
         if (sessionRepository.existsById(id)) {
-            // 🔥 Supprimer d’abord les mesures liées à cette session
             mesureRepository.deleteBySessionId(id);
             sessionRepository.deleteById(id);
             return true;

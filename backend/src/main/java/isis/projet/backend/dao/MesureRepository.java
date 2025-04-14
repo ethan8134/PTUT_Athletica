@@ -11,13 +11,10 @@ import java.util.List;
 
 public interface MesureRepository extends JpaRepository<Mesure, Integer> {
 
-    // Mesures liées à un indicateur de session
     List<Mesure> findByIndicateurSessionIdIndicateurSession(Integer idIndicateurSession);
 
-    // Mesures liées à un indicateur global
     List<Mesure> findByIndicateurGlobalIdIndicateurGlobal(Integer idIndicateurGlobal);
 
-    // 💥 Supprimer toutes les mesures liées à une session
     @Modifying
     @Transactional
     @Query("DELETE FROM Mesure m WHERE m.session.idSession = :sessionId")

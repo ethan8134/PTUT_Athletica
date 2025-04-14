@@ -23,13 +23,12 @@ public class Mesure {
 
     @ManyToOne
     @JoinColumn(name = "id_indicateur_global")
-    private IndicateurGlobal indicateurGlobal; // ✅ à ajouter
+    private IndicateurGlobal indicateurGlobal;
 
     @ManyToOne
     @JoinColumn(name = "id_session")
     private Session session;
 
-    // Getters et Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

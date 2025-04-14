@@ -8,7 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/mesures")
-@CrossOrigin(origins = "http://localhost:3000") // adapte si besoin
+@CrossOrigin(origins = "http://localhost:3000")
 public class MesureController {
 
     private final MesureRepository mesureRepository;

@@ -1,10 +1,8 @@
 package isis.projet.backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Data

@@ -45,20 +45,18 @@ public class ImportController {
                     .skip(1)
                     .collect(Collectors.toList());
 
-            Utilisateur user = utilisateurRepository.findById(1).orElse(null); // à adapter si besoin
+            Utilisateur user = utilisateurRepository.findById(1).orElse(null);
 
             for (String ligne : lignes) {
                 String[] parts = ligne.split(",");
 
                 if (parts.length >= 5) {
-                    // 🔄 Traitement indicateur de session
                     String nomInd = parts[0].trim();
                     String unite = parts[1].trim();
                     double valeur = Double.parseDouble(parts[2].trim());
                     LocalDate date = LocalDate.parse(parts[3].trim());
                     String nomSession = parts[4].trim();
 
-                    // Trouver ou créer la session
                     Session session = sessionRepository.findByNom(nomSession)
                             .orElseGet(() -> {
                                 Session s = new Session();
@@ -85,7 +83,6 @@ public class ImportController {
                     mesureRepository.save(mesure);
 
                 } else if (parts.length >= 4) {
-                    // ✅ Traitement indicateur global
                     String nomInd = parts[0].trim();
                     String unite = parts[1].trim();
                     LocalDate date = LocalDate.parse(parts[3].trim());
@@ -99,11 +96,11 @@ public class ImportController {
                 }
             }
 
-            return ResponseEntity.ok("✅ Fichier importé avec succès !");
+            return ResponseEntity.ok("Fichier importé avec succès !");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("❌ Erreur lors de l'importation.");
+                    .body("Erreur lors de l'importation.");
         }
     }
 }
