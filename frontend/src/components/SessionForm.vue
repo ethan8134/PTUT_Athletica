@@ -56,7 +56,7 @@ const submitForm = () => {
     .then((createdSession) => {
       console.log("Session créée :", createdSession);
       router.push({
-        path: "/AjouterIndicateur",
+        path: "/AjouterIndicateur2",
         query: { sessionId: createdSession.idSession },
       });
     })
