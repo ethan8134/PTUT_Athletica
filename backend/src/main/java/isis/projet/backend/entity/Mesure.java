@@ -1,6 +1,7 @@
 package isis.projet.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -18,8 +19,9 @@ public class Mesure {
 
     @ManyToOne
     @JoinColumn(name = "id_indicateur_session")
-    @JsonBackReference
     private IndicateurSession indicateurSession;
+
+
 
     @ManyToOne
     @JoinColumn(name = "id_indicateur_global")

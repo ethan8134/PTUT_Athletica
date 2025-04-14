@@ -253,22 +253,21 @@ const viewSessionDetails = async (sessionId) => {
 
 const loadSessionMesures = async (sessionId) => {
   try {
-    // Récupérer toutes les mesures
     const mesuresRes = await fetch('http://localhost:8989/api/mesures');
     const allMesures = await mesuresRes.json();
 
-    // Filtrer les mesures liées à cette session
     sessionMesures.value = allMesures
       .filter(m => m.session && m.session.idSession == sessionId)
       .map(m => {
-        const indicateur = m.indicateurSession || {};
+        const indicateurId = m.indicateurSession?.idIndicateurSession;
+        const indicateurComplet = indicateurs.value.find(i => i.idIndicateurSession === indicateurId);
         return {
           id: m.id,
-          indicateurNom: indicateur.nom || 'Inconnu',
+          indicateurNom: indicateurComplet?.nom || 'Inconnu',
           valeur: m.valeur,
-          unite: indicateur.unite || '',
+          unite: indicateurComplet?.unite || '',
           dateMesure: m.dateMesure,
-          indicateurId: indicateur.idIndicateurSession
+          indicateurId: indicateurId
         };
       });
   } catch (error) {
@@ -276,6 +275,7 @@ const loadSessionMesures = async (sessionId) => {
     sessionMesures.value = [];
   }
 };
+
 
 const addMesure = async () => {
   if (!newMesure.value.indicateurId || !newMesure.value.valeur || !newMesure.value.dateMesure) {
@@ -430,4 +430,61 @@ tr:nth-child(even) {
 .btn-details:hover {
   background-color: #3e8e41 !important;
 }
+
+.v-card-title {
+  font-weight: bold;
+  font-size: 1.3rem;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 12px;
+}
+
+.v-simple-table thead th {
+  background-color: #0e0c70;
+  color: white;
+  font-weight: bold;
+  font-size: 15px;
+  padding: 12px;
+  border: none;
+  text-align: left;
+}
+
+.v-simple-table tbody td {
+  padding: 14px 16px;
+  font-size: 14px;
+  background-color: #fefefe;
+  border-bottom: 1px solid #ddd;
+}
+
+.v-simple-table tbody tr:nth-child(even) td {
+  background-color: #f9f9f9;
+}
+
+.v-btn[icon] {
+  background-color: #b00020 !important;
+  color: white !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease;
+}
+.v-btn[icon]:hover {
+  transform: scale(1.1);
+  background-color: #9b001b !important;
+}
+
+.v-btn.primary {
+  margin-left: auto;
+  margin-top: 16px;
+}
+
+.v-dialog .v-card {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.text-center.my-4 p {
+  color: #777;
+  font-style: italic;
+}
+
 </style>
