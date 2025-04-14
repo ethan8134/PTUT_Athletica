@@ -13,12 +13,14 @@
               label="Utilisateur (Email)"
               outlined
               class="mb-4"
+              v-model="email"
             ></v-text-field>
             <v-text-field
               label="Mot de passe"
               type="password"
               outlined
               class="mb-4"
+              v-model="password"
             ></v-text-field>
             <v-btn color="primary" block @click="login">Se connecter</v-btn>
             <v-btn color="secondary" block outlined class="mt-2"
@@ -38,6 +40,7 @@
         </template>
         <v-app-bar-title>Athletica</v-app-bar-title>
         <v-btn to="/PageAide">Aide</v-btn>
+        <v-btn color="error" outlined @click="logout">Déconnexion</v-btn>
       </v-app-bar>
       <v-navigation-drawer app v-model="drawer">
         <v-divider></v-divider>
@@ -69,14 +72,101 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted, watch } from "vue";
 
+// État de connexion
 const isLoggedIn = ref(false);
 const drawer = ref(false);
 
-function login() {
-  isLoggedIn.value = true;
+// Champs de connexion
+const email = ref("");
+const password = ref("");
+
+// Données utilisateur simulées
+const validCredentials = {
+  email: "test@user.com",
+  password: "password",
+};
+
+// Timer pour la déconnexion automatique
+let logoutTimer = null;
+
+// Fonction pour démarrer le timer de déconnexion
+function startLogoutTimer() {
+  clearTimeout(logoutTimer); // Réinitialise le timer s'il existe déjà
+  logoutTimer = setTimeout(() => {
+    logout(); // Déconnecte l'utilisateur après 60 secondes d'inactivité
+  }, 60000); // 60 secondes
 }
+
+// Fonction pour arrêter le timer de déconnexion
+function stopLogoutTimer() {
+  clearTimeout(logoutTimer); // Arrête le timer
+}
+
+// Fonction de déconnexion
+function logout() {
+  isLoggedIn.value = false;
+  localStorage.removeItem("isLoggedIn"); // Supprime l'état de connexion
+  stopLogoutTimer(); // Arrête le timer
+  alert("Vous avez été déconnecté pour inactivité.");
+}
+
+// Fonction de connexion
+function login() {
+  if (
+    email.value === validCredentials.email &&
+    password.value === validCredentials.password
+  ) {
+    // Connexion réussie
+    isLoggedIn.value = true;
+    localStorage.setItem("isLoggedIn", "true"); // Stocke l'état de connexion
+    alert("Connexion réussie !");
+    startLogoutTimer(); // Démarre le timer pour la déconnexion automatique
+  } else {
+    // Connexion échouée
+    alert("Email ou mot de passe incorrect.");
+  }
+}
+
+// Gestion de l'activité utilisateur
+function resetLogoutTimer() {
+  if (isLoggedIn.value) {
+    stopLogoutTimer(); // Arrête le timer existant
+    startLogoutTimer(); // Redémarre le timer
+  }
+}
+
+// Ajoute les écouteurs d'événements pour détecter l'activité utilisateur
+onMounted(() => {
+  const storedLoginState = localStorage.getItem("isLoggedIn");
+  if (storedLoginState === "true") {
+    isLoggedIn.value = true;
+    startLogoutTimer(); // Démarre le timer si l'utilisateur est connecté
+  }
+
+  // Écoute les événements d'activité utilisateur
+  window.addEventListener("mousemove", resetLogoutTimer);
+  window.addEventListener("keydown", resetLogoutTimer);
+  window.addEventListener("click", resetLogoutTimer);
+});
+
+// Supprime les écouteurs d'événements lors du démontage du composant
+onUnmounted(() => {
+  window.removeEventListener("mousemove", resetLogoutTimer);
+  window.removeEventListener("keydown", resetLogoutTimer);
+  window.removeEventListener("click", resetLogoutTimer);
+  stopLogoutTimer(); // Arrête le timer si le composant est démonté
+});
+
+// Réinitialise le timer à chaque changement de `isLoggedIn`
+watch(isLoggedIn, (newValue) => {
+  if (newValue) {
+    startLogoutTimer();
+  } else {
+    stopLogoutTimer();
+  }
+});
 </script>
 
 <style scoped>
