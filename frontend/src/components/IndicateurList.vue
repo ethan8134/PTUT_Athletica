@@ -120,7 +120,7 @@ const newMesure = ref({ valeur: "", dateMesure: "" });
 function redirectToProgressions(ind) {
   router.push({
     path: "/MesProgressions",
-    query: { indicateurId: ind.id, indicateurNom: ind.nom },
+    query: { indicateurId: ind.type + "-" + ind.id }, // on encode le type ici
   });
 }
 
