@@ -11,67 +11,122 @@
     <div class="table-container">
       <table>
         <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
+        <tr>
+          <th>Nom</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
         </thead>
         <tbody>
-          <tr v-for="ses in sessions" :key="ses.idSession">
-            <template v-if="editingSessionId === ses.idSession">
-              <td><input v-model="editedSession.nom" /></td>
-              <td><input type="date" v-model="editedSession.date" /></td>
-              <td class="action-buttons">
-                <button @click="saveEdit">💾 Enregistrer</button>
-                <button @click="cancelEdit">Annuler</button>
-              </td>
-            </template>
-            <template v-else>
-              <td>{{ ses.nom }}</td>
-              <td>{{ ses.date }}</td>
-              <td class="action-buttons">
-                <button @click="startEdit(ses)">Modifier</button>
-                <button @click="deleteSession(ses.idSession)">Supprimer</button>
-                <button @click="openAddMesureDialog(ses)">
-                  Ajouter une valeur
-                </button>
-              </td>
-            </template>
-          </tr>
+        <tr v-for="ses in sessions" :key="ses.idSession">
+          <template v-if="editingSessionId === ses.idSession">
+            <td><input v-model="editedSession.nom" /></td>
+            <td><input type="date" v-model="editedSession.date" /></td>
+            <td class="action-buttons">
+              <button @click="saveEdit">💾 Enregistrer</button>
+              <button @click="cancelEdit">Annuler</button>
+            </td>
+          </template>
+          <template v-else>
+            <td>{{ ses.nom }}</td>
+            <td>{{ formatDate(ses.dateSession) }}</td>
+            <td class="action-buttons">
+              <button @click="startEdit(ses)">Modifier</button>
+              <button @click="deleteSession(ses.idSession)">Supprimer</button>
+              <button class="btn-details" @click="viewSessionDetails(ses.idSession)">
+                <v-icon small>mdi-information-outline</v-icon> Voir détails
+              </button>
+            </td>
+          </template>
+        </tr>
         </tbody>
       </table>
     </div>
 
-    <v-dialog v-model="showAddMesure" max-width="500px">
+    <!-- Dialogue des détails de session -->
+    <v-dialog v-model="showDetails" max-width="800px">
       <v-card>
-        <v-card-title
-          >Ajouter une mesure à {{ selectedSession?.nom }}</v-card-title
-        >
-        <v-card-text>
-          <v-select
-            label="Indicateur de session"
-            :items="indicateursSession"
-            item-title="nom"
-            item-value="idIndicateurSession"
-            v-model="selectedIndicateurId"
-            required
-          />
-          <v-text-field
-            label="Valeur"
-            v-model="newMesure.valeur"
-            type="number"
-          />
-          <v-text-field
-            label="Date"
-            v-model="newMesure.dateMesure"
-            type="date"
-          />
+        <v-card-title>
+          Détails de la session : {{ selectedSession?.nom || '' }}
+        </v-card-title>
+        <v-card-text v-if="selectedSession">
+          <p><strong>Date :</strong> {{ formatDate(selectedSession.dateSession) }}</p>
+          <v-divider class="my-4"></v-divider>
+
+          <h3 class="mb-3">Mesures associées</h3>
+          <v-simple-table v-if="sessionMesures.length > 0">
+            <template v-slot:default>
+              <thead>
+              <tr>
+                <th>Indicateur</th>
+                <th>Valeur</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="mesure in sessionMesures" :key="mesure.id">
+                <td>{{ mesure.indicateurNom }}</td>
+                <td>{{ mesure.valeur }} {{ mesure.unite }}</td>
+                <td>{{ formatDate(mesure.dateMesure) }}</td>
+                <td>
+                  <v-btn icon small color="error" @click="deleteMesure(mesure.id)">
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </td>
+              </tr>
+              </tbody>
+            </template>
+          </v-simple-table>
+          <div v-else class="text-center my-4">
+            <p>Aucune mesure associée à cette session</p>
+          </div>
+
+          <v-btn color="primary" class="mt-4" @click="showAddMesureDialog = true">
+            Ajouter une mesure
+          </v-btn>
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" @click="submitMesure">Valider</v-btn>
-          <v-btn color="grey" @click="showAddMesure = false">Annuler</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="showDetails = false">
+            Fermer
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialogue pour ajouter une mesure -->
+    <v-dialog v-model="showAddMesureDialog" max-width="500px">
+      <v-card>
+        <v-card-title>Ajouter une mesure</v-card-title>
+        <v-card-text>
+          <v-select
+            v-model="newMesure.indicateurId"
+            :items="indicateurs"
+            item-title="nom"
+            item-value="idIndicateurSession"
+            label="Indicateur"
+            required
+          ></v-select>
+
+          <v-text-field
+            v-model="newMesure.valeur"
+            label="Valeur"
+            type="number"
+            required
+          ></v-text-field>
+
+          <v-text-field
+            v-model="newMesure.dateMesure"
+            label="Date"
+            type="date"
+            required
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" text @click="showAddMesureDialog = false">Annuler</v-btn>
+          <v-btn color="primary" text @click="addMesure">Enregistrer</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -80,18 +135,26 @@
 
 <script setup>
 import { ref, watch, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const searchTerm = ref("");
 const sessions = ref([]);
 const allSessions = ref([]);
 const editingSessionId = ref(null);
 const editedSession = ref({});
 
-const showAddMesure = ref(false);
+// Variables pour le dialogue de détails
+const showDetails = ref(false);
 const selectedSession = ref(null);
-const selectedIndicateurId = ref(null);
-const newMesure = ref({ valeur: "", dateMesure: "" });
-const indicateursSession = ref([]);
+const sessionMesures = ref([]);
+const indicateurs = ref([]);
+const showAddMesureDialog = ref(false);
+const newMesure = ref({
+  indicateurId: null,
+  valeur: '',
+  dateMesure: new Date().toISOString().split('T')[0]
+});
 
 const apiBaseUrl = "http://localhost:8989/api/sessions";
 
@@ -110,10 +173,8 @@ const fetchSessions = () => {
 const filterSessions = () => {
   // Filtre les sessions en fonction du terme de recherche
   sessions.value = allSessions.value.filter(
-    (
-      ses // Filtre les sessions
-    ) =>
-      searchTerm.value // Vérifie si le terme de recherche est présent dans le nom de la session
+    (ses) =>
+      searchTerm.value
         ? ses.nom.toLowerCase().includes(searchTerm.value.toLowerCase())
         : true
   );
@@ -139,19 +200,19 @@ const deleteSession = (id) => {
 
 const startEdit = (session) => {
   // Démarre l'édition d'une session
-  editingSessionId.value = session.idSession; // Définit l'ID de la session à éditer
-  editedSession.value = { ...session }; // Crée une copie de la session pour l'édition
+  editingSessionId.value = session.idSession;
+  editedSession.value = { ...session };
 };
 
 const cancelEdit = () => {
   // Annule l'édition
-  editingSessionId.value = null; // Réinitialise l'ID de la session à éditer
-  editedSession.value = {}; // Réinitialise la session éditée
+  editingSessionId.value = null;
+  editedSession.value = {};
 };
 
 const saveEdit = () => {
   // Enregistre les modifications
-  const id = editingSessionId.value; // Récupère l'ID de la session à éditer
+  const id = editingSessionId.value;
   fetch(`${apiBaseUrl}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -169,48 +230,128 @@ const saveEdit = () => {
     });
 };
 
-const openAddMesureDialog = (session) => {
-  // Ouvre la boîte de dialogue pour ajouter une mesure
-  selectedSession.value = session; // Définit la session sélectionnée
-  fetch("http://localhost:8989/api/indicateurSessions")
-    .then((res) => res.json())
-    .then((data) => {
-      indicateursSession.value = data;
-      showAddMesure.value = true;
-    });
+const viewSessionDetails = async (sessionId) => {
+  try {
+    // Charger les détails de la session
+    const sessionRes = await fetch(`http://localhost:8989/api/sessions/${sessionId}`);
+    selectedSession.value = await sessionRes.json();
+
+    // Charger les indicateurs disponibles
+    const indicateursRes = await fetch('http://localhost:8989/api/indicateurSessions');
+    indicateurs.value = await indicateursRes.json();
+
+    // Charger les mesures liées à cette session
+    await loadSessionMesures(sessionId);
+
+    // Afficher la boîte de dialogue
+    showDetails.value = true;
+  } catch (error) {
+    console.error('Erreur lors du chargement des données:', error);
+    alert('Erreur lors du chargement des détails de la session');
+  }
 };
 
-const submitMesure = () => {
-  if (
-    !selectedIndicateurId.value ||
-    !newMesure.value.valeur ||
-    !newMesure.value.dateMesure
-  ) {
-    alert("Veuillez remplir tous les champs.");
+const loadSessionMesures = async (sessionId) => {
+  try {
+    // Récupérer toutes les mesures
+    const mesuresRes = await fetch('http://localhost:8989/api/mesures');
+    const allMesures = await mesuresRes.json();
+
+    // Filtrer les mesures liées à cette session
+    sessionMesures.value = allMesures
+      .filter(m => m.session && m.session.idSession == sessionId)
+      .map(m => {
+        const indicateur = m.indicateurSession || {};
+        return {
+          id: m.id,
+          indicateurNom: indicateur.nom || 'Inconnu',
+          valeur: m.valeur,
+          unite: indicateur.unite || '',
+          dateMesure: m.dateMesure,
+          indicateurId: indicateur.idIndicateurSession
+        };
+      });
+  } catch (error) {
+    console.error('Erreur lors du chargement des mesures:', error);
+    sessionMesures.value = [];
+  }
+};
+
+const addMesure = async () => {
+  if (!newMesure.value.indicateurId || !newMesure.value.valeur || !newMesure.value.dateMesure) {
+    alert('Veuillez remplir tous les champs.');
     return;
   }
 
-  const body = {
-    valeur: parseFloat(newMesure.value.valeur),
-    dateMesure: newMesure.value.dateMesure,
-    indicateurSession: { idIndicateurSession: selectedIndicateurId.value },
-    session: { idSession: selectedSession.value.idSession },
-  };
+  try {
+    const body = {
+      valeur: parseFloat(newMesure.value.valeur),
+      dateMesure: newMesure.value.dateMesure,
+      indicateurSession: {
+        idIndicateurSession: newMesure.value.indicateurId
+      },
+      session: {
+        idSession: selectedSession.value.idSession
+      }
+    };
 
-  fetch("http://localhost:8989/api/mesures", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error("Erreur API");
-      alert("Mesure enregistrée !");
-      showAddMesure.value = false;
-    })
-    .catch((err) => {
-      console.error(err);
-      alert("Une erreur est survenue.");
+    const response = await fetch('http://localhost:8989/api/mesures', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
     });
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de l\'ajout de la mesure');
+    }
+
+    await loadSessionMesures(selectedSession.value.idSession);
+    showAddMesureDialog.value = false;
+    newMesure.value = {
+      indicateurId: null,
+      valeur: '',
+      dateMesure: new Date().toISOString().split('T')[0]
+    };
+    alert('Mesure ajoutée avec succès!');
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Une erreur est survenue lors de l\'ajout de la mesure.');
+  }
+};
+
+const deleteMesure = async (mesureId) => {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette mesure?')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:8989/api/mesures/${mesureId}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de la suppression');
+    }
+
+    await loadSessionMesures(selectedSession.value.idSession);
+    alert('Mesure supprimée avec succès!');
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Une erreur est survenue lors de la suppression.');
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'Non spécifiée';
+
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
 };
 </script>
 
@@ -278,5 +419,15 @@ tr:nth-child(even) {
 }
 .action-buttons button:hover {
   background-color: darkblue;
+}
+.btn-details {
+  background-color: #4CAF50 !important; /* Vert pour le bouton de détails */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.btn-details:hover {
+  background-color: #3e8e41 !important;
 }
 </style>
