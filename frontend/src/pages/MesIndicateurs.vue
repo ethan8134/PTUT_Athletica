@@ -29,7 +29,7 @@
 
 .redirect-btn {
   display: flex;
-  width: 300px;
+  width: 360px;
   height: 170px;
   justify-content: center;
   padding: 8px 16px;
