@@ -2,7 +2,6 @@
   <v-container class="account-page">
     <h2>Mon Compte</h2>
 
-    <!-- Affichage des données ou formulaire en mode édition -->
     <div v-if="!isEditing">
       <p><strong>Pseudo :</strong> {{ userData.pseudo }}</p>
       <p><strong>Email :</strong> {{ userData.email }}</p>
@@ -51,14 +50,15 @@
 import { ref } from "vue";
 
 const userData = ref({
-  pseudo: "A renseigner",
+  // Initialisation des données utilisateur
+  pseudo: "Ymir",
   email: "test@user.com",
   mdp: "password",
-  preferences: "A renseigner",
+  preferences: "Course à pied",
 });
 
-const editableData = ref({ ...userData.value });
-const isEditing = ref(false);
+const editableData = ref({ ...userData.value }); // Copie des données utilisateur pour l'édition
+const isEditing = ref(false); // État d'édition
 
 const enterEditMode = () => {
   editableData.value = { ...userData.value };
@@ -66,8 +66,8 @@ const enterEditMode = () => {
 };
 
 const applyChanges = () => {
-  userData.value = { ...editableData.value };
-  isEditing.value = false;
+  userData.value = { ...editableData.value }; // Applique les modifications
+  isEditing.value = false; // Quitte le mode édition
   alert("Modifications appliquées localement !");
 };
 

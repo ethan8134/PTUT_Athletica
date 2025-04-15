@@ -4,7 +4,11 @@
     <form @submit.prevent="submitForm">
       <div class="form-group">
         <label>Nom de l'indicateur</label>
-        <input v-model="indicateur.nom" placeholder="Ex: Rythme Cardiaque" required />
+        <input
+          v-model="indicateur.nom"
+          placeholder="Ex: Rythme Cardiaque"
+          required
+        />
       </div>
 
       <div class="form-group">
@@ -14,19 +18,28 @@
 
       <div class="form-group">
         <label>Catégorie</label>
-        <input v-model="indicateur.categorie" placeholder="Ex: Indicateur de santé" required />
+        <input
+          v-model="indicateur.categorie"
+          placeholder="Ex: Indicateur de santé"
+          required
+        />
       </div>
 
       <div class="form-buttons">
         <button class="add-btn" type="submit">Valider</button>
-        <button class="cancel-btn" type="button" @click="cancelForm">Annuler</button>
-        <button class="associate-btn" type="button" @click="showAssocierDialog = true">
+        <button class="cancel-btn" type="button" @click="cancelForm">
+          Annuler
+        </button>
+        <button
+          class="associate-btn"
+          type="button"
+          @click="showAssocierDialog = true"
+        >
           Associer à une session
         </button>
       </div>
     </form>
 
-    <!-- POPUP -->
     <v-dialog v-model="showAssocierDialog" max-width="500px">
       <v-card>
         <v-card-title>Associer à une session</v-card-title>
@@ -54,7 +67,9 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn text @click="showAssocierDialog = false">Fermer</v-btn>
-          <v-btn color="green" @click="ajouterIndicateurEtMesure">Ajouter la valeur</v-btn>
+          <v-btn color="green" @click="ajouterIndicateurEtMesure"
+            >Ajouter la valeur</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -62,41 +77,46 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 const showAssocierDialog = ref(false);
 const selectedSessionId = ref(null);
-const mesureExistante = ref({ valeur: '' });
+const mesureExistante = ref({ valeur: "" });
 const sessions = ref([]);
 
-const indicateur = ref({ nom: '', unite: '', categorie: '' });
+const indicateur = ref({ nom: "", unite: "", categorie: "" }); // Définition de l'indicateur
 
 onMounted(() => {
-  fetch('http://localhost:8989/api/sessions')
-    .then(res => res.json())
-    .then(data => sessions.value = data);
+  // Récupération des sessions
+  fetch("http://localhost:8989/api/sessions")
+    .then((res) => res.json())
+    .then((data) => (sessions.value = data));
 });
 
 const submitForm = async () => {
-  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.categorie) {
-    alert('Veuillez remplir tous les champs.');
+  if (
+    !indicateur.value.nom ||
+    !indicateur.value.unite ||
+    !indicateur.value.categorie
+  ) {
+    alert("Veuillez remplir tous les champs.");
     return;
   }
 
   const body = {
     nom: indicateur.value.nom,
     unite: indicateur.value.unite,
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
     categorie: { idCategorie: 1 },
-    utilisateur: { idPersonne: 1 }
+    utilisateur: { idPersonne: 1 },
   };
 
-  const res = await fetch('http://localhost:8989/api/indicateurSessions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+  const res = await fetch("http://localhost:8989/api/indicateurSessions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -106,23 +126,29 @@ const submitForm = async () => {
     return;
   }
 
-  alert('Indicateur créé avec succès !');
-  router.push('/MesIndicateurs');
+  alert("Indicateur créé avec succès !");
+  router.push("/MesIndicateurs"); // Redirection vers la page des indicateurs
 };
 
 const cancelForm = () => {
-  router.push('/MesIndicateurs');
+  router.push("/MesIndicateurs"); // Redirection vers la page des indicateurs
 };
 
 const ajouterIndicateurEtMesure = async () => {
+  // Fonction pour ajouter l'indicateur et la mesure
   if (!selectedSessionId.value || !mesureExistante.value.valeur) {
-    alert('Veuillez remplir tous les champs.');
+    // Vérification des champs
+    alert("Veuillez remplir tous les champs.");
     return;
   }
 
-  const selectedSession = sessions.value.find(s => s.idSession === selectedSessionId.value);
+  const selectedSession = sessions.value.find(
+    // Vérification de la session
+    (s) => s.idSession === selectedSessionId.value // Récupération de la session sélectionnée
+  );
   if (!selectedSession) {
-    alert('Session introuvable.');
+    // Vérification de l'existence de la session
+    alert("Session introuvable.");
     return;
   }
 
@@ -132,15 +158,18 @@ const ajouterIndicateurEtMesure = async () => {
     unite: indicateur.value.unite,
     date: selectedSession.dateSession,
     categorie: { idCategorie: 1 },
-    utilisateur: { idPersonne: 1 }
+    utilisateur: { idPersonne: 1 },
   };
 
   try {
-    const resIndicateur = await fetch('http://localhost:8989/api/indicateurSessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(indicateurBody)
-    });
+    const resIndicateur = await fetch(
+      "http://localhost:8989/api/indicateurSessions",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(indicateurBody),
+      }
+    );
 
     if (!resIndicateur.ok) {
       const msg = await resIndicateur.text();
@@ -153,14 +182,17 @@ const ajouterIndicateurEtMesure = async () => {
     const mesureBody = {
       valeur: parseFloat(mesureExistante.value.valeur),
       dateMesure: selectedSession.dateSession,
-      indicateurSession: { idIndicateurSession: indicateurCree.idIndicateurSession },
-      session: { idSession: selectedSessionId.value }
+      indicateurSession: {
+        idIndicateurSession: indicateurCree.idIndicateurSession,
+      },
+      session: { idSession: selectedSessionId.value },
     };
 
-    const resMesure = await fetch('http://localhost:8989/api/mesures', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mesureBody)
+    const resMesure = await fetch("http://localhost:8989/api/mesures", {
+      // Créer la mesure
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(mesureBody),
     });
 
     if (!resMesure.ok) {
@@ -168,9 +200,9 @@ const ajouterIndicateurEtMesure = async () => {
       throw new Error(err);
     }
 
-    alert('Indicateur et mesure ajoutés avec succès !');
-    showAssocierDialog.value = false;
-    mesureExistante.value = { valeur: '' };
+    alert("Indicateur et mesure ajoutés avec succès !");
+    showAssocierDialog.value = false; // Fermer la boîte de dialogue
+    mesureExistante.value = { valeur: "" }; // Réinitialiser la valeur de la mesure
   } catch (err) {
     console.error(err);
     alert("Erreur lors de l’ajout : " + err.message);

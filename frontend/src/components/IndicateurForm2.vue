@@ -77,7 +77,8 @@ const mesureExistante = ref({ valeur: "" });
 const indicateursExistants = ref([]);
 
 onMounted(() => {
-  fetch("http://localhost:8989/api/indicateurSessions")
+  // Vérification de l'ID de session dans l'URL
+  fetch("http://localhost:8989/api/indicateurSessions") // Récupération des indicateurs existants
     .then((res) => res.json())
     .then((data) => {
       indicateursExistants.value = data;
@@ -85,12 +86,14 @@ onMounted(() => {
 });
 
 const ajouterValeurExistante = () => {
+  // Fonction pour ajouter une valeur à un indicateur existant
   if (!selectedIndicateurId.value || !mesureExistante.value.valeur) {
+    // Vérification des champs
     alert("Veuillez remplir tous les champs.");
     return;
   }
 
-  const dateFromSession = new Date().toISOString().split("T")[0];
+  const dateFromSession = new Date().toISOString().split("T")[0]; // Récupération de la date actuelle au format ISO
 
   const body = {
     valeur: parseFloat(mesureExistante.value.valeur),
@@ -122,7 +125,13 @@ const indicateur = ref({
 });
 
 const submitForm = async () => {
-  if (!indicateur.value.nom || !indicateur.value.unite || !indicateur.value.categorie) {
+  // Fonction pour soumettre le formulaire
+  if (
+    !indicateur.value.nom ||
+    !indicateur.value.unite ||
+    !indicateur.value.categorie
+  ) {
+    // Vérification des champs
     alert("Veuillez remplir tous les champs.");
     return;
   }
@@ -145,7 +154,9 @@ const submitForm = async () => {
 
     if (!res.ok) {
       const errorText = await res.text();
-      throw new Error(`Erreur lors de la création de l'indicateur: ${res.status} ${res.statusText}\n${errorText}`);
+      throw new Error(
+        `Erreur lors de la création de l'indicateur: ${res.status} ${res.statusText}\n${errorText}`
+      );
     }
 
     await res.json();

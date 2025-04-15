@@ -74,46 +74,42 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
 
-// État de connexion
 const isLoggedIn = ref(false);
 const drawer = ref(false);
 
-// Champs de connexion
 const email = ref("");
 const password = ref("");
 
-// Données utilisateur simulées
 const validCredentials = {
   email: "test@user.com",
   password: "password",
 };
 
-// Timer pour la déconnexion automatique
-let logoutTimer = null;
+let logoutTimer = null; // Timer pour la déconnexion automatique
 
-// Fonction pour démarrer le timer de déconnexion
 function startLogoutTimer() {
-  clearTimeout(logoutTimer); // Réinitialise le timer s'il existe déjà
+  // Démarre le timer de déconnexion
+  clearTimeout(logoutTimer);
   logoutTimer = setTimeout(() => {
-    logout(); // Déconnecte l'utilisateur après 60 secondes d'inactivité
-  }, 120000); // 60 secondes
+    logout(); // Déconnecte l'utilisateur après 120 secondes d'inactivité
+  }, 120000); // définition du temps requis avant déconnexion 60 secondes
 }
 
-// Fonction pour arrêter le timer de déconnexion
 function stopLogoutTimer() {
+  // Fonction pour arrêter le timer de déconnexion
   clearTimeout(logoutTimer); // Arrête le timer
 }
 
-// Fonction de déconnexion
 function logout() {
+  // Fonction de déconnexion
   isLoggedIn.value = false;
   localStorage.removeItem("isLoggedIn"); // Supprime l'état de connexion
   stopLogoutTimer(); // Arrête le timer
   alert("Vous avez été déconnecté pour inactivité.");
 }
 
-// Fonction de connexion
 function login() {
+  // Fonction de connexion
   if (
     email.value === validCredentials.email &&
     password.value === validCredentials.password
@@ -129,16 +125,16 @@ function login() {
   }
 }
 
-// Gestion de l'activité utilisateur
 function resetLogoutTimer() {
+  // Gestion de l'activité utilisateur
   if (isLoggedIn.value) {
     stopLogoutTimer(); // Arrête le timer existant
     startLogoutTimer(); // Redémarre le timer
   }
 }
 
-// Ajoute les écouteurs d'événements pour détecter l'activité utilisateur
 onMounted(() => {
+  // Ajoute les écouteurs d'événements pour détecter l'activité utilisateur
   const storedLoginState = localStorage.getItem("isLoggedIn");
   if (storedLoginState === "true") {
     isLoggedIn.value = true;
@@ -151,16 +147,16 @@ onMounted(() => {
   window.addEventListener("click", resetLogoutTimer);
 });
 
-// Supprime les écouteurs d'événements lors du démontage du composant
 onUnmounted(() => {
+  // Supprime les écouteurs d'événements lors du démontage du composant
   window.removeEventListener("mousemove", resetLogoutTimer);
   window.removeEventListener("keydown", resetLogoutTimer);
   window.removeEventListener("click", resetLogoutTimer);
   stopLogoutTimer(); // Arrête le timer si le composant est démonté
 });
 
-// Réinitialise le timer à chaque changement de `isLoggedIn`
 watch(isLoggedIn, (newValue) => {
+  // Réinitialise le timer à chaque changement de `isLoggedIn`
   if (newValue) {
     startLogoutTimer();
   } else {

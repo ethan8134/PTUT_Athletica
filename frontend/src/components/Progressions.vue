@@ -86,37 +86,42 @@ const mesuresParIndicateur = ref({});
 const selectedIndicateurIds = ref([]);
 
 const fetchMesuresForIndicateur = async (ind) => {
+  // Fonction pour récupérer les mesures d'un indicateur
   try {
     const endpoint =
       ind.type === "global"
-        ? `http://localhost:8989/api/mesures/indicateur-global/${ind.rawId}`
-        : `http://localhost:8989/api/mesures/indicateur-session/${ind.rawId}`;
+        ? `http://localhost:8989/api/mesures/indicateur-global/${ind.rawId}` // URL pour les indicateurs globaux
+        : `http://localhost:8989/api/mesures/indicateur-session/${ind.rawId}`; // URL pour les indicateurs de session
 
-    const res = await fetch(endpoint);
+    const res = await fetch(endpoint); // Requête pour récupérer les mesures
     if (!res.ok) throw new Error();
 
-    const data = await res.json();
+    const data = await res.json(); // Conversion de la réponse en JSON
     mesuresParIndicateur.value[ind.id] = data.sort(
+      // Tri des mesures par date
       (a, b) => new Date(a.dateMesure) - new Date(b.dateMesure)
     );
   } catch (err) {
-    console.error(`Erreur fetch mesures ${ind.nom}:`, err);
-    mesuresParIndicateur.value[ind.id] = [];
+    console.error(`Erreur fetch mesures ${ind.nom}:`, err); // Gestion des erreurs
+    mesuresParIndicateur.value[ind.id] = []; // Réinitialisation des mesures en cas d'erreur
   }
 };
 
 const supprimerMesure = async (ind, idMesure) => {
-  const confirmDelete = confirm("Souhaites-tu vraiment supprimer cette mesure ?");
+  // Fonction pour supprimer une mesure
+  const confirmDelete = confirm(
+    "Souhaites-tu vraiment supprimer cette mesure ?"
+  );
   if (!confirmDelete) return;
 
-  const endpoint = `http://localhost:8989/api/mesures/${idMesure}`;
+  const endpoint = `http://localhost:8989/api/mesures/${idMesure}`; // URL pour supprimer la mesure
   try {
     const res = await fetch(endpoint, { method: "DELETE" });
     if (res.ok) {
       alert("Mesure supprimée avec succès");
       mesuresParIndicateur.value[ind.id] = mesuresParIndicateur.value[
         ind.id
-        ].filter((m) => m.id !== idMesure);
+      ].filter((m) => m.id !== idMesure);
     } else {
       alert(`Erreur suppression (${res.status})`);
     }
@@ -128,11 +133,16 @@ const supprimerMesure = async (ind, idMesure) => {
 
 onMounted(async () => {
   const [globals, sessions] = await Promise.all([
-    fetch("http://localhost:8989/api/indicateurGlobals").then((res) => res.json()),
-    fetch("http://localhost:8989/api/indicateurSessions").then((res) => res.json()),
+    fetch("http://localhost:8989/api/indicateurGlobals").then((res) =>
+      res.json()
+    ),
+    fetch("http://localhost:8989/api/indicateurSessions").then((res) =>
+      res.json()
+    ),
   ]);
 
   const mappedGlobals = globals.map((ind) => ({
+    // Mappage des indicateurs globaux
     id: `global-${ind.idIndicateurGlobal}`,
     nom: ind.nom + " (Global)",
     type: "global",
@@ -140,37 +150,43 @@ onMounted(async () => {
   }));
 
   const mappedSessions = sessions.map((ind) => ({
+    // Mappage des indicateurs de session
     id: `session-${ind.idIndicateurSession}`,
     nom: ind.nom + " (Session)",
     type: "session",
     rawId: ind.idIndicateurSession,
   }));
 
-  indicateurs.value = [...mappedGlobals, ...mappedSessions];
+  indicateurs.value = [...mappedGlobals, ...mappedSessions]; // Fusion des deux types d'indicateurs
 
-  const idFromQuery = route.query.indicateurId;
+  const idFromQuery = route.query.indicateurId; // Récupération de l'ID de l'indicateur depuis la requête
   if (idFromQuery) {
-    selectedIndicateurIds.value = [idFromQuery];
-    const selected = indicateurs.value.find((i) => i.id === idFromQuery);
-    if (selected) await fetchMesuresForIndicateur(selected);
+    // Si un ID est présent dans la requête
+    selectedIndicateurIds.value = [idFromQuery]; // Sélection de l'indicateur
+    const selected = indicateurs.value.find((i) => i.id === idFromQuery); // Recherche de l'indicateur
+    if (selected) await fetchMesuresForIndicateur(selected); // Récupération des mesures
   }
 });
 
 watch(selectedIndicateurIds, async (newIds) => {
+  // Surveillance des indicateurs sélectionnés
   for (const id of newIds) {
+    // Vérification de chaque ID
     if (!mesuresParIndicateur.value[id]) {
-      const ind = indicateurs.value.find((i) => i.id === id);
-      if (ind) await fetchMesuresForIndicateur(ind);
+      // Si les mesures ne sont pas déjà récupérées
+      const ind = indicateurs.value.find((i) => i.id === id); // Recherche de l'indicateur
+      if (ind) await fetchMesuresForIndicateur(ind); // Récupération des mesures
     }
   }
 });
 
-const indicateursSelectionnes = computed(() =>
-  indicateurs.value.filter((i) => selectedIndicateurIds.value.includes(i.id))
+const indicateursSelectionnes = computed(
+  () =>
+    indicateurs.value.filter((i) => selectedIndicateurIds.value.includes(i.id)) // Filtrage des indicateurs sélectionnés
 );
 
 const getChartConfig = (ind) => {
-  const mesures = mesuresParIndicateur.value[ind.id] || [];
+  const mesures = mesuresParIndicateur.value[ind.id] || []; // Récupération des mesures de l'indicateur
 
   return {
     series: [
@@ -180,8 +196,8 @@ const getChartConfig = (ind) => {
           x:
             ind.type === "session"
               ? `${new Date(m.dateMesure).toLocaleDateString("fr-FR")} - ${
-                m.session?.nom || "Session inconnue"
-              }`
+                  m.session?.nom || "Session inconnue"
+                }`
               : new Date(m.dateMesure).toLocaleDateString("fr-FR"),
           y: m.valeur,
         })),
